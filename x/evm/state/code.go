@@ -1,21 +1,29 @@
 package state
 
 import (
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/sei-protocol/sei-chain/utils/logging"
 )
 
 func (s *DBImpl) GetCodeHash(addr common.Address) common.Hash {
+	t := logging.NewTimer(fmt.Sprintf("GetCode(%s)", addr.Hex()), s.ctx)
+	defer t.Stop()
 	s.k.PrepareReplayedAddr(s.ctx, addr)
 	return s.k.GetCodeHash(s.ctx, addr)
 }
 
 func (s *DBImpl) GetCode(addr common.Address) []byte {
+	t := logging.NewTimer(fmt.Sprintf("GetCode(%s)", addr.Hex()), s.ctx)
+	defer t.Stop()
 	s.k.PrepareReplayedAddr(s.ctx, addr)
 	return s.k.GetCode(s.ctx, addr)
 }
 
 func (s *DBImpl) SetCode(addr common.Address, code []byte) {
+	t := logging.NewTimer(fmt.Sprintf("SetCode(%s, ...", addr.Hex()), s.ctx)
+	defer t.Stop()
 	s.k.PrepareReplayedAddr(s.ctx, addr)
 
 	if s.logger != nil && s.logger.OnCodeChange != nil {
@@ -30,6 +38,8 @@ func (s *DBImpl) SetCode(addr common.Address, code []byte) {
 }
 
 func (s *DBImpl) GetCodeSize(addr common.Address) int {
+	t := logging.NewTimer(fmt.Sprintf("GetCodeSize(%s)", addr.Hex()), s.ctx)
+	defer t.Stop()
 	s.k.PrepareReplayedAddr(s.ctx, addr)
 	return s.k.GetCodeSize(s.ctx, addr)
 }
