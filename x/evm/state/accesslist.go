@@ -40,40 +40,38 @@ func (s *DBImpl) SlotInAccessList(addr common.Address, slot common.Hash) (addres
 }
 
 func (s *DBImpl) AddAddressToAccessList(addr common.Address) {
-	//
-	//
-	//t := logging.NewTimer(fmt.Sprintf("AddAddressToAccessList(%s)", addr.Hex()), s.ctx)
-	//defer t.Stop()
-	//
-	//s.k.PrepareReplayedAddr(s.ctx, addr)
-	//al := s.getAccessList()
-	//defer s.saveAccessList(al)
-	//if _, present := al.Addresses[addr]; present {
-	//	return
-	//}
-	//al.Addresses[addr] = -1
+	t := logging.NewTimer(fmt.Sprintf("AddAddressToAccessList(%s)", addr.Hex()), s.ctx)
+	defer t.Stop()
+
+	s.k.PrepareReplayedAddr(s.ctx, addr)
+	al := s.getAccessList()
+	defer s.saveAccessList(al)
+	if _, present := al.Addresses[addr]; present {
+		return
+	}
+	al.Addresses[addr] = -1
 }
 
 func (s *DBImpl) AddSlotToAccessList(addr common.Address, slot common.Hash) {
-	//t := logging.NewTimer(fmt.Sprintf("AddSlotToAccessList(%s)", addr.Hex()), s.ctx)
-	//defer t.Stop()
-	//
-	//s.k.PrepareReplayedAddr(s.ctx, addr)
-	//al := s.getAccessList()
-	//defer s.saveAccessList(al)
-	//idx, addrPresent := al.Addresses[addr]
-	//if !addrPresent || idx == -1 {
-	//	// Address not present, or addr present but no slots there
-	//	al.Addresses[addr] = len(al.Slots)
-	//	slotmap := map[common.Hash]struct{}{slot: {}}
-	//	al.Slots = append(al.Slots, slotmap)
-	//	return
-	//}
-	//// There is already an (address,slot) mapping
-	//slotmap := al.Slots[idx]
-	//if _, ok := slotmap[slot]; !ok {
-	//	slotmap[slot] = struct{}{}
-	//}
+	t := logging.NewTimer(fmt.Sprintf("AddSlotToAccessList(%s)", addr.Hex()), s.ctx)
+	defer t.Stop()
+
+	s.k.PrepareReplayedAddr(s.ctx, addr)
+	al := s.getAccessList()
+	defer s.saveAccessList(al)
+	idx, addrPresent := al.Addresses[addr]
+	if !addrPresent || idx == -1 {
+		// Address not present, or addr present but no slots there
+		al.Addresses[addr] = len(al.Slots)
+		slotmap := map[common.Hash]struct{}{slot: {}}
+		al.Slots = append(al.Slots, slotmap)
+		return
+	}
+	// There is already an (address,slot) mapping
+	slotmap := al.Slots[idx]
+	if _, ok := slotmap[slot]; !ok {
+		slotmap[slot] = struct{}{}
+	}
 }
 
 func (s *DBImpl) Prepare(_ params.Rules, sender, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses ethtypes.AccessList) {
