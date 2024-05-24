@@ -2,6 +2,8 @@ package state
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/sei-protocol/sei-chain/utils/logging"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -22,6 +24,9 @@ func (s *DBImpl) AddressInAccessList(addr common.Address) bool {
 }
 
 func (s *DBImpl) SlotInAccessList(addr common.Address, slot common.Hash) (addressOk bool, slotOk bool) {
+	t := logging.NewTimer(fmt.Sprintf("SlotInAccessList(%s)", addr.Hex()), s.ctx)
+	defer t.Stop()
+
 	s.k.PrepareReplayedAddr(s.ctx, addr)
 	al := s.getAccessList()
 	idx, ok := al.Addresses[addr]
@@ -33,6 +38,10 @@ func (s *DBImpl) SlotInAccessList(addr common.Address, slot common.Hash) (addres
 }
 
 func (s *DBImpl) AddAddressToAccessList(addr common.Address) {
+
+	t := logging.NewTimer(fmt.Sprintf("AddAddressToAccessList(%s)", addr.Hex()), s.ctx)
+	defer t.Stop()
+
 	s.k.PrepareReplayedAddr(s.ctx, addr)
 	al := s.getAccessList()
 	defer s.saveAccessList(al)
@@ -43,6 +52,9 @@ func (s *DBImpl) AddAddressToAccessList(addr common.Address) {
 }
 
 func (s *DBImpl) AddSlotToAccessList(addr common.Address, slot common.Hash) {
+	t := logging.NewTimer(fmt.Sprintf("AddSlotToAccessList(%s)", addr.Hex()), s.ctx)
+	defer t.Stop()
+
 	s.k.PrepareReplayedAddr(s.ctx, addr)
 	al := s.getAccessList()
 	defer s.saveAccessList(al)
@@ -62,6 +74,9 @@ func (s *DBImpl) AddSlotToAccessList(addr common.Address, slot common.Hash) {
 }
 
 func (s *DBImpl) Prepare(_ params.Rules, sender, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses ethtypes.AccessList) {
+	t := logging.NewTimer(fmt.Sprintf("Prepare(%s...)", sender.Hex()), s.ctx)
+	defer t.Stop()
+
 	s.k.PrepareReplayedAddr(s.ctx, sender)
 	s.k.PrepareReplayedAddr(s.ctx, coinbase)
 	if dest != nil {
