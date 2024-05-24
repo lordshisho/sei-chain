@@ -8,7 +8,7 @@ import (
 )
 
 func (s *DBImpl) GetCodeHash(addr common.Address) common.Hash {
-	t := logging.NewTimer(fmt.Sprintf("GetCode(%s)", addr.Hex()), s.ctx)
+	t := logging.NewTimer(fmt.Sprintf("GetCodeHash(%s)", addr.Hex()), s.ctx)
 	defer t.Stop()
 	s.k.PrepareReplayedAddr(s.ctx, addr)
 	return s.k.GetCodeHash(s.ctx, addr)
