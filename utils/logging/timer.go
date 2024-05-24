@@ -22,5 +22,5 @@ func NewTimer(name string, ctx sdk.Context) *Timer {
 }
 
 func (t *Timer) Stop() {
-	t.logger.Info(fmt.Sprintf("[Timer] %s took %dms", t.name, time.Since(t.start).Microseconds()))
+	t.logger.Info(fmt.Sprintf("[Timer] %s took %s", t.name, time.Since(t.start).String()))
 }
