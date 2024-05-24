@@ -205,6 +205,7 @@ func (k *Keeper) GetEVMMessage(ctx sdk.Context, tx *ethtypes.Transaction, sender
 }
 
 func (k Keeper) applyEVMMessage(ctx sdk.Context, msg *core.Message, stateDB *state.DBImpl, gp core.GasPool) (*core.ExecutionResult, error) {
+	setup := logging.NewTimer("TransitionDb setup", ctx)
 	blockCtx, err := k.GetVMBlockContext(ctx, gp)
 	if err != nil {
 		return nil, err
@@ -213,7 +214,11 @@ func (k Keeper) applyEVMMessage(ctx sdk.Context, msg *core.Message, stateDB *sta
 	txCtx := core.NewEVMTxContext(msg)
 	evmInstance := vm.NewEVM(*blockCtx, txCtx, stateDB, cfg, vm.Config{})
 	st := core.NewStateTransition(evmInstance, msg, &gp, true) // fee already charged in ante handler
+
+	setup.Stop()
+	t := logging.NewTimer("TransitionDb()", ctx)
 	res, err := st.TransitionDb()
+	t.Stop()
 	return res, err
 }
 

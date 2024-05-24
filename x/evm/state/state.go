@@ -2,6 +2,8 @@ package state
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/sei-protocol/sei-chain/utils/logging"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +14,9 @@ import (
 )
 
 func (s *DBImpl) CreateAccount(acc common.Address) {
+	t := logging.NewTimer(fmt.Sprintf("CreateAccount(%s)", acc.Hex()), s.ctx)
+	defer t.Stop()
+
 	s.k.PrepareReplayedAddr(s.ctx, acc)
 	// clear any existing state but keep balance untouched
 	s.clearAccountState(acc)
@@ -19,10 +24,14 @@ func (s *DBImpl) CreateAccount(acc common.Address) {
 }
 
 func (s *DBImpl) GetCommittedState(addr common.Address, hash common.Hash) common.Hash {
+	t := logging.NewTimer(fmt.Sprintf("GetCommittedState(%s, %s)", addr.Hex(), hash.Hex()), s.ctx)
+	defer t.Stop()
 	return s.getState(s.snapshottedCtxs[0], addr, hash)
 }
 
 func (s *DBImpl) GetState(addr common.Address, hash common.Hash) common.Hash {
+	t := logging.NewTimer(fmt.Sprintf("GetState(%s, %s)", addr.Hex(), hash.Hex()), s.ctx)
+	defer t.Stop()
 	return s.getState(s.ctx, addr, hash)
 }
 
@@ -32,6 +41,9 @@ func (s *DBImpl) getState(ctx sdk.Context, addr common.Address, hash common.Hash
 }
 
 func (s *DBImpl) SetState(addr common.Address, key common.Hash, val common.Hash) {
+	t := logging.NewTimer(fmt.Sprintf("SetState(%s, %s, %s)", addr.Hex(), key.Hex(), val.Hex()), s.ctx)
+	defer t.Stop()
+
 	s.k.PrepareReplayedAddr(s.ctx, addr)
 
 	if s.logger != nil && s.logger.OnStorageChange != nil {
@@ -42,6 +54,8 @@ func (s *DBImpl) SetState(addr common.Address, key common.Hash, val common.Hash)
 }
 
 func (s *DBImpl) GetTransientState(addr common.Address, key common.Hash) common.Hash {
+	t := logging.NewTimer(fmt.Sprintf("GetTransientState(%s, %s)", addr.Hex(), key.Hex()), s.ctx)
+	defer t.Stop()
 	val, found := s.getTransientState(addr, key)
 	if !found {
 		return common.Hash{}
@@ -50,6 +64,9 @@ func (s *DBImpl) GetTransientState(addr common.Address, key common.Hash) common.
 }
 
 func (s *DBImpl) SetTransientState(addr common.Address, key, val common.Hash) {
+	t := logging.NewTimer(fmt.Sprintf("SetTransientState(%s, %s, %s)", addr.Hex(), key.Hex(), val.Hex()), s.ctx)
+	defer t.Stop()
+
 	st, ok := s.tempStateCurrent.transientStates[addr.Hex()]
 	if !ok {
 		st = make(map[string]common.Hash)
@@ -158,6 +175,9 @@ func (s *DBImpl) Created(acc common.Address) bool {
 }
 
 func (s *DBImpl) SetStorage(addr common.Address, states map[common.Hash]common.Hash) {
+	t := logging.NewTimer(fmt.Sprintf("SetStorage(%s...)", addr.Hex()), s.ctx)
+	defer t.Stop()
+
 	s.clearAccountState(addr)
 	for key, val := range states {
 		s.SetState(addr, key, val)

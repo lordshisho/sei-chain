@@ -7,6 +7,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/sei-protocol/sei-chain/utils"
+	"github.com/sei-protocol/sei-chain/utils/logging"
 )
 
 // Initialized for each transaction individually
@@ -82,6 +83,9 @@ func (s *DBImpl) SetEVM(evm *vm.EVM) {}
 func (s *DBImpl) AddPreimage(_ common.Hash, _ []byte) {}
 
 func (s *DBImpl) Finalize() (surplus sdk.Int, err error) {
+	t := logging.NewTimer("StateDB.Finalize()", s.ctx)
+	defer t.Stop()
+
 	if s.simulation {
 		panic("should never call finalize on a simulation DB")
 	}
@@ -127,6 +131,8 @@ func (s *DBImpl) GetStorageRoot(common.Address) common.Hash {
 }
 
 func (s *DBImpl) Copy() vm.StateDB {
+	t := logging.NewTimer("StateDB.Copy()", s.ctx)
+	defer t.Stop()
 	newCtx := s.ctx.WithMultiStore(s.ctx.MultiStore().CacheMultiStore())
 	return &DBImpl{
 		ctx:                newCtx,
