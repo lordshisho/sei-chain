@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/sei-protocol/sei-chain/utils/logging"
 	"math"
 	"math/big"
 	"runtime/debug"
@@ -45,6 +46,10 @@ func (server msgServer) EVMTransaction(goCtx context.Context, msg *types.MsgEVMT
 		return &types.MsgEVMTransactionResponse{}, nil
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	t := logging.NewTimer("EVMTransaction", ctx)
+	defer t.Stop()
+
 	// EVM has a special case here, mainly because for an EVM transaction the gas limit is set on EVM payload level, not on top-level GasWanted field
 	// as normal transactions (because existing eth client can't). As a result EVM has its own dedicated ante handler chain. The full sequence is:
 
@@ -131,7 +136,10 @@ func (server msgServer) EVMTransaction(goCtx context.Context, msg *types.MsgEVMT
 		originalGasMeter.ConsumeGas(adjustedGasUsed.TruncateInt().Uint64(), "evm transaction")
 	}()
 
+	at := logging.NewTimer("server.applyEVMMessage", ctx)
 	res, applyErr := server.applyEVMMessage(ctx, emsg, stateDB, gp)
+	at.Stop()
+
 	serverRes = &types.MsgEVMTransactionResponse{
 		Hash: tx.Hash().Hex(),
 	}
