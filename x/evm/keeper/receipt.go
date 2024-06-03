@@ -10,12 +10,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const defaultBufferSize = 4096 // 4KB initial capacity, adjust as needed
-
 // Create a pool for byte slices
 var byteSlicePool = sync.Pool{
 	New: func() interface{} {
-		return make([]byte, 0, defaultBufferSize)
+		return make([]byte, 0, 1024) // 1KB initial capacity, adjust as needed
 	},
 }
 
@@ -26,7 +24,7 @@ func getByteSlice() []byte {
 
 // putByteSlice returns a byte slice to the pool
 func putByteSlice(b []byte) {
-	if cap(b) <= defaultBufferSize { // Only pool slices of the default buffer size or less
+	if cap(b) <= 1024 { // Only pool slices of 1KB or less, adjust as needed
 		byteSlicePool.Put(b[:0])
 	}
 }
@@ -60,15 +58,7 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 		return err
 	}
 
-	// Ensure the slice is big enough
-	if len(data) > cap(bz) {
-		bz = make([]byte, len(data))
-	}
-
-	// Copy the data into the slice
-	copy(bz, data)
-
 	// Set the data in the store
-	store.Set(types.ReceiptKey(txHash), bz[:len(data)])
+	store.Set(types.ReceiptKey(txHash), data)
 	return nil
 }
