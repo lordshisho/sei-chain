@@ -15,20 +15,22 @@ const defaultBufferSize = 4096 // 4KB initial capacity, adjust as needed
 // Create a pool for byte slices
 var byteSlicePool = sync.Pool{
 	New: func() interface{} {
-		return make([]byte, 0, defaultBufferSize)
+		return make([]byte, defaultBufferSize)
 	},
 }
 
 // getByteSlice retrieves a byte slice from the pool
-func getByteSlice() []byte {
-	return byteSlicePool.Get().([]byte)
+func getByteSlice(size int) []byte {
+	buf := byteSlicePool.Get().([]byte)
+	if cap(buf) < size {
+		return make([]byte, size)
+	}
+	return buf[:size]
 }
 
 // putByteSlice returns a byte slice to the pool
 func putByteSlice(b []byte) {
-	if cap(b) <= defaultBufferSize { // Only pool slices of the default buffer size or less
-		byteSlicePool.Put(b[:0])
-	}
+	byteSlicePool.Put(b[:0])
 }
 
 // Receipt is a data structure that stores EVM specific transaction metadata.
@@ -50,20 +52,15 @@ func (k *Keeper) GetReceipt(ctx sdk.Context, txHash common.Hash) (*types.Receipt
 func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.Receipt) error {
 	store := ctx.KVStore(k.storeKey)
 
-	// Use the byte slice pool for marshaling
-	bz := getByteSlice()
-	defer putByteSlice(bz)
-
 	// Marshal the receipt
 	data, err := proto.Marshal(receipt)
 	if err != nil {
 		return err
 	}
 
-	// Ensure the slice is big enough
-	if len(data) > cap(bz) {
-		bz = make([]byte, len(data))
-	}
+	// Use the byte slice pool to temporarily hold the data
+	bz := getByteSlice(len(data))
+	defer putByteSlice(bz)
 
 	// Copy the data into the slice
 	copy(bz, data)
