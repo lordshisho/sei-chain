@@ -13,11 +13,10 @@ import (
 // Global buffer pool
 var bufPool = sync.Pool{
 	New: func() interface{} {
+		// Create a buffer with a reasonable initial size
 		return make([]byte, 1024)
 	},
 }
-
-var poolMutex = &sync.Mutex{}
 
 // Receipt is a data structure that stores EVM specific transaction metadata.
 // Many EVM applications (e.g. MetaMask) rely on being able to query receipt
@@ -39,13 +38,10 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 	store := ctx.KVStore(k.storeKey)
 
 	// Get a buffer from the pool
-	poolMutex.Lock()
 	buf := bufPool.Get().([]byte)
-	poolMutex.Unlock()
 	defer func() {
-		poolMutex.Lock()
-		bufPool.Put(buf[:0]) // Reset buffer length but keep capacity
-		poolMutex.Unlock()
+		// Reset and put the buffer back into the pool
+		bufPool.Put(buf[:0])
 	}()
 
 	// Marshal the receipt
@@ -56,8 +52,10 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 
 	// Ensure the buffer is exactly the size needed
 	if cap(buf) < len(bz) {
+		// Create a new buffer if the current one is too small
 		buf = make([]byte, len(bz))
 	} else {
+		// Adjust the length to match the marshaled data size
 		buf = buf[:len(bz)]
 	}
 
