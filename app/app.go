@@ -395,6 +395,7 @@ func New(
 	aclOpts []aclkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+	startMemStats()
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
