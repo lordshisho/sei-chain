@@ -35,24 +35,28 @@ func (k *Keeper) GetReceipt(ctx sdk.Context, txHash common.Hash) (*types.Receipt
 func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.Receipt) error {
 	store := ctx.KVStore(k.storeKey)
 
-	// Get a buffer from the pool
-	buf := bufPool.Get().([]byte)
+	// Get a buffer from the pool and ensure it's clear
+	buf := bufPool.Get().([]byte)[:0]
 	defer func() {
 		bufPool.Put(buf) // Return the buffer to the pool
 	}()
 
-	// Marshal the receipt
+	// resize the buffer if necessary
 	size := receipt.Size()
 	if len(buf) < size {
 		buf = make([]byte, size)
+	} else if size < len(buf) {
+		buf = buf[0:size]
 	}
+
 	_, err := receipt.MarshalTo(buf)
 	if err != nil {
+		ctx.Logger().Error("error marshalling receipt", "err", err)
 		return err
 	}
 
-	fmt.Printf("[Debug] tx=%s, receiptLen=%d\n", txHash.Hex(), size)
+	ctx.Logger().Info("[Debug] saving receipt", "tx", txHash.Hex(), "receipt", fmt.Sprintf("%X", buf))
 
-	store.Set(types.ReceiptKey(txHash), buf[0:size])
+	store.Set(types.ReceiptKey(txHash), buf)
 	return nil
 }
