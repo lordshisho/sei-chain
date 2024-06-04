@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"bytes"
 	"errors"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -9,8 +11,15 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// Receipt is a data structure that stores EVM specific transaction metadata.
-// Many EVM applications (e.g. MetaMask) relies on being on able to query receipt
+// Global buffer pool
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
+}
+
+// Receipt is a data structure that stores EVM-specific transaction metadata.
+// Many EVM applications (e.g., MetaMask) rely on being able to query receipt
 // by EVM transaction hash (not Sei transaction hash) to function properly.
 func (k *Keeper) GetReceipt(ctx sdk.Context, txHash common.Hash) (*types.Receipt, error) {
 	store := ctx.KVStore(k.storeKey)
@@ -27,10 +36,28 @@ func (k *Keeper) GetReceipt(ctx sdk.Context, txHash common.Hash) (*types.Receipt
 
 func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.Receipt) error {
 	store := ctx.KVStore(k.storeKey)
+
+	// Get a buffer from the pool
+	buf := bufPool.Get().(*bytes.Buffer)
+	defer func() {
+		buf.Reset()      // Reset the buffer for reuse
+		bufPool.Put(buf) // Return the buffer to the pool
+	}()
+
+	// Marshal the receipt
 	bz, err := proto.Marshal(receipt)
 	if err != nil {
 		return err
 	}
-	store.Set(types.ReceiptKey(txHash), bz)
+
+	// Ensure the buffer is large enough
+	if cap(buf.Bytes()) < len(bz) {
+		buf.Grow(len(bz) - cap(buf.Bytes()))
+	}
+
+	// Copy marshalled data into the buffer
+	buf.Write(bz)
+
+	store.Set(types.ReceiptKey(txHash), buf.Bytes())
 	return nil
 }
