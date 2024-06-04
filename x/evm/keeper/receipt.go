@@ -2,18 +2,11 @@ package keeper
 
 import (
 	"errors"
-	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/sei-protocol/sei-chain/x/evm/types"
 )
-
-var bufPool = sync.Pool{
-	New: func() interface{} {
-		return make([]byte, 4096)
-	},
-}
 
 // Receipt is a data structure that stores EVM-specific transaction metadata.
 // Many EVM applications (e.g., MetaMask) rely on being able to query receipt
@@ -31,11 +24,28 @@ func (k *Keeper) GetReceipt(ctx sdk.Context, txHash common.Hash) (*types.Receipt
 	return &r, nil
 }
 
+func (k *Keeper) pushSlice(b []byte) {
+	k.sliceLock.Lock()
+	defer k.sliceLock.Unlock()
+	k.slices = append(k.slices, b)
+}
+
+func (k *Keeper) ReleaseBuffers() {
+	k.sliceLock.Lock()
+	defer k.sliceLock.Unlock()
+	for _, b := range k.slices {
+		k.slicePool.Put(b)
+	}
+	k.slices = make([][]byte, 0, cap(k.slices))
+}
+
 func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.Receipt) error {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := bufPool.Get().([]byte)
-	defer bufPool.Put(bz)
+	bz := k.slicePool.Get().([]byte)
+	defer func() {
+		k.pushSlice(bz)
+	}()
 
 	if cap(bz) < receipt.Size() {
 		bz = make([]byte, receipt.Size())
@@ -48,12 +58,6 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 		return err
 	}
 
-	// for science, seeing if the store is safe for holding slice
-	b := make([]byte, len(bz))
-	copy(b, bz)
-
-	//ctx.Logger().Info("[Debug] saving receipt", "tx", txHash.Hex(), "receipt", fmt.Sprintf("%X", bz))
-
-	store.Set(types.ReceiptKey(txHash), b)
+	store.Set(types.ReceiptKey(txHash), bz)
 	return nil
 }
