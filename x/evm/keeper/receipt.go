@@ -34,8 +34,14 @@ func (k *Keeper) GetReceipt(ctx sdk.Context, txHash common.Hash) (*types.Receipt
 func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.Receipt) error {
 	store := ctx.KVStore(k.storeKey)
 
-	// make my slice here because it's more easily-garbage collected
-	bz := make([]byte, receipt.Size())
+	bz := bufPool.Get().([]byte)
+	defer bufPool.Put(bz)
+
+	if cap(bz) < receipt.Size() {
+		bz = make([]byte, receipt.Size())
+	} else {
+		bz = bz[:receipt.Size()]
+	}
 
 	_, err := receipt.MarshalTo(bz)
 	if err != nil {
