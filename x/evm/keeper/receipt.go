@@ -45,9 +45,8 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 	size := receipt.Size()
 	if cap(buf) < size {
 		buf = make([]byte, size)
-	} else if size < len(buf) {
-		buf = buf[0:size]
 	}
+	buf = buf[0:size]
 
 	_, err := receipt.MarshalTo(buf)
 	if err != nil {
