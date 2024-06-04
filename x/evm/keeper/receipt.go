@@ -49,7 +49,7 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 	buf.Reset()
 
 	// Marshal the receipt
-	bz, err := proto.Marshal(receipt)
+	bz, err := proto.MarshalOptions{Deterministic: true}.Marshal(receipt)
 	if err != nil {
 		return err
 	}
@@ -61,13 +61,10 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 
 	// Write marshalled data into the buffer
 	buf.Write(bz)
+	buf.Truncate(len(bz))
 
-	// Copy the exact length of the marshalled data to ensure no residual data
-	finalBz := make([]byte, len(bz))
-	copy(finalBz, buf.Bytes())
+	fmt.Printf("[Debug] tx=%s, receiptLen=%d\n", txHash.Hex(), buf.Len())
 
-	fmt.Printf("[Debug] tx=%s, receipt=%X\n", txHash.Hex(), finalBz)
-
-	store.Set(types.ReceiptKey(txHash), finalBz)
+	store.Set(types.ReceiptKey(txHash), buf.Bytes())
 	return nil
 }
