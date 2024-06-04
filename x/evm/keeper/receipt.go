@@ -2,21 +2,14 @@ package keeper
 
 import (
 	"errors"
-	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/sei-protocol/sei-chain/x/evm/types"
 )
 
-var slicePool = sync.Pool{
-	New: func() interface{} {
-		return make([]byte, 4096)
-	},
-}
-
-// Receipt is a data structure that stores EVM-specific transaction metadata.
-// Many EVM applications (e.g., MetaMask) rely on being able to query receipt
+// Receipt is a data structure that stores EVM specific transaction metadata.
+// Many EVM applications (e.g. MetaMask) relies on being on able to query receipt
 // by EVM transaction hash (not Sei transaction hash) to function properly.
 func (k *Keeper) GetReceipt(ctx sdk.Context, txHash common.Hash) (*types.Receipt, error) {
 	store := ctx.KVStore(k.storeKey)
@@ -31,39 +24,12 @@ func (k *Keeper) GetReceipt(ctx sdk.Context, txHash common.Hash) (*types.Receipt
 	return &r, nil
 }
 
-func (k *Keeper) pushSlice(b []byte) {
-	k.sliceLock.Lock()
-	defer k.sliceLock.Unlock()
-	k.slices = append(k.slices, b)
-}
-
-func (k *Keeper) ReleaseBuffers() {
-	k.sliceLock.Lock()
-	defer k.sliceLock.Unlock()
-	for _, b := range k.slices {
-		slicePool.Put(b)
-	}
-	k.slices = make([][]byte, 0, cap(k.slices))
-}
-
 func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.Receipt) error {
 	store := ctx.KVStore(k.storeKey)
-	bz := slicePool.Get().([]byte)
-	defer func() {
-		k.pushSlice(bz)
-	}()
-
-	if cap(bz) < receipt.Size() {
-		bz = make([]byte, receipt.Size())
-	}
-	bz = bz[:receipt.Size()]
-
-	_, err := receipt.MarshalTo(bz)
+	bz, err := receipt.Marshal()
 	if err != nil {
-		ctx.Logger().Error("error marshalling receipt", "err", err)
 		return err
 	}
-
 	store.Set(types.ReceiptKey(txHash), bz)
 	return nil
 }

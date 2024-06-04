@@ -54,9 +54,6 @@ type Keeper struct {
 	wasmKeeper     *wasmkeeper.PermissionedKeeper
 	wasmViewKeeper *wasmkeeper.Keeper
 
-	sliceLock *sync.Mutex
-	slices    [][]byte
-
 	cachedFeeCollectorAddressMtx *sync.RWMutex
 	cachedFeeCollectorAddress    *common.Address
 	nonceMx                      *sync.RWMutex
@@ -138,7 +135,6 @@ func NewKeeper(
 		cachedFeeCollectorAddressMtx: &sync.RWMutex{},
 		keyToNonce:                   make(map[tmtypes.TxKey]*AddressNoncePair),
 		deferredInfo:                 &sync.Map{},
-		sliceLock:                    &sync.Mutex{},
 	}
 	return k
 }
