@@ -51,6 +51,6 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 
 	//ctx.Logger().Info("[Debug] saving receipt", "tx", txHash.Hex(), "receipt", fmt.Sprintf("%X", bz))
 
-	store.Set(types.ReceiptKey(txHash), bz)
+	store.Set(types.ReceiptKey(txHash), bz[:receipt.Size()])
 	return nil
 }
