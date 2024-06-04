@@ -25,12 +25,12 @@ func (k *Keeper) GetReceipt(ctx sdk.Context, txHash common.Hash) (*types.Receipt
 }
 
 func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.Receipt) error {
-	_ = ctx.KVStore(k.storeKey)
-	_, err := receipt.Marshal()
+	store := ctx.KVStore(k.storeKey)
+	bz, err := receipt.Marshal()
 	if err != nil {
 		return err
 	}
 
-	//store.Set(types.ReceiptKey(txHash), bz)
+	store.Set(types.ReceiptKey(txHash), bz)
 	return nil
 }
