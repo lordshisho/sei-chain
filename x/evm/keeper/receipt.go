@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,7 +43,7 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 		return err
 	}
 
-	ctx.Logger().Info("[Debug] saving receipt", "tx", txHash.Hex(), "receipt", fmt.Sprintf("%X", bz))
+	//ctx.Logger().Info("[Debug] saving receipt", "tx", txHash.Hex(), "receipt", fmt.Sprintf("%X", bz))
 
 	store.Set(types.ReceiptKey(txHash), bz)
 	return nil
