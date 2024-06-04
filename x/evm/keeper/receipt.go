@@ -43,7 +43,7 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 
 	// resize the buffer if necessary
 	size := receipt.Size()
-	if len(buf) < size {
+	if cap(buf) < size {
 		buf = make([]byte, size)
 	} else if size < len(buf) {
 		buf = buf[0:size]
