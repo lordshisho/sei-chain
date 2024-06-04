@@ -39,9 +39,8 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 
 	if cap(bz) < receipt.Size() {
 		bz = make([]byte, receipt.Size())
-	} else {
-		bz = bz[:receipt.Size()]
 	}
+	bz = bz[:receipt.Size()]
 
 	_, err := receipt.MarshalTo(bz)
 	if err != nil {
@@ -49,8 +48,12 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 		return err
 	}
 
+	// for science, seeing if the store is safe for holding slice
+	b := make([]byte, len(bz))
+	copy(b, bz)
+
 	//ctx.Logger().Info("[Debug] saving receipt", "tx", txHash.Hex(), "receipt", fmt.Sprintf("%X", bz))
 
-	store.Set(types.ReceiptKey(txHash), bz[:receipt.Size()])
+	store.Set(types.ReceiptKey(txHash), b)
 	return nil
 }
