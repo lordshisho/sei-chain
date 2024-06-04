@@ -2,11 +2,18 @@ package keeper
 
 import (
 	"errors"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/sei-protocol/sei-chain/x/evm/types"
 )
+
+var slicePool = sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 4096)
+	},
+}
 
 // Receipt is a data structure that stores EVM-specific transaction metadata.
 // Many EVM applications (e.g., MetaMask) rely on being able to query receipt
@@ -34,15 +41,14 @@ func (k *Keeper) ReleaseBuffers() {
 	k.sliceLock.Lock()
 	defer k.sliceLock.Unlock()
 	for _, b := range k.slices {
-		k.slicePool.Put(b)
+		slicePool.Put(b)
 	}
 	k.slices = make([][]byte, 0, cap(k.slices))
 }
 
 func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.Receipt) error {
 	store := ctx.KVStore(k.storeKey)
-
-	bz := k.slicePool.Get().([]byte)
+	bz := slicePool.Get().([]byte)
 	defer func() {
 		k.pushSlice(bz)
 	}()
