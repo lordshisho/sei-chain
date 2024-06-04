@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,6 +45,9 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 		bufPool.Put(buf) // Return the buffer to the pool
 	}()
 
+	// Clear the buffer and ensure it is empty
+	buf.Reset()
+
 	// Marshal the receipt
 	bz, err := proto.Marshal(receipt)
 	if err != nil {
@@ -52,12 +56,18 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, txHash common.Hash, receipt *types.
 
 	// Ensure the buffer is large enough
 	if cap(buf.Bytes()) < len(bz) {
-		buf.Grow(len(bz) - cap(buf.Bytes()))
+		buf.Grow(len(bz))
 	}
 
-	// Copy marshalled data into the buffer
+	// Write marshalled data into the buffer
 	buf.Write(bz)
 
-	store.Set(types.ReceiptKey(txHash), buf.Bytes())
+	// Copy the exact length of the marshalled data to ensure no residual data
+	finalBz := make([]byte, len(bz))
+	copy(finalBz, buf.Bytes())
+
+	fmt.Printf("[Debug] tx=%s, receipt=%X\n", txHash.Hex(), finalBz)
+
+	store.Set(types.ReceiptKey(txHash), finalBz)
 	return nil
 }
