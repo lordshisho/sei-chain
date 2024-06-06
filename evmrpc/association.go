@@ -160,3 +160,46 @@ func (t *AssociationAPI) GetCosmosTx(ctx context.Context, ethHash common.Hash) (
 	}
 	return "", fmt.Errorf("transaction not found")
 }
+
+func (t *AssociationAPI) GetEvmTx(ctx context.Context, cosmosHash string) (result string, returnErr error) {
+	startTime := time.Now()
+	defer recordMetrics("sei_getEvmTx", t.connectionType, startTime, returnErr == nil)
+	hashBytes, err := hex.DecodeString(cosmosHash)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode cosmosHash: %w", err)
+	}
+
+	txResponse, err := t.tmClient.Tx(ctx, hashBytes, false)
+	if err != nil {
+		return "", err
+	}
+	if txResponse.TxResult.EvmTxInfo == nil {
+		return "", fmt.Errorf("transaction not found")
+	}
+
+	return txResponse.TxResult.EvmTxInfo.TxHash, nil
+}
+
+func (t *AssociationAPI) GetNativeERC20Pointer(ctx context.Context, addr common.Address) (result string, returnErr error) {
+	startTime := time.Now()
+	defer recordMetrics("sei_getNativeERC20Pointer", t.connectionType, startTime, returnErr == nil)
+	token, _, exists := t.keeper.GetNativeERC20Pointer(t.ctxProvider(LatestCtxHeight), addr)
+
+	if !exists {
+		return "", fmt.Errorf("pointer not found")
+	}
+
+	return token, nil
+}
+
+func (t *AssociationAPI) GetERC20NativePointer(ctx context.Context, token string) (result string, returnErr error) {
+	startTime := time.Now()
+	defer recordMetrics("sei_getERC20NativePointer", t.connectionType, startTime, returnErr == nil)
+	addr, _, exists := t.keeper.GetERC20NativePointer(t.ctxProvider(LatestCtxHeight), token)
+
+	if !exists {
+		return "", fmt.Errorf("pointer not found")
+	}
+
+	return addr.String(), nil
+}

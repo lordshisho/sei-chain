@@ -46,6 +46,15 @@ func (k *Keeper) GetERC20NativePointer(ctx sdk.Context, token string) (addr comm
 	return
 }
 
+// Native Token -> ERC20
+func (k *Keeper) GetNativeERC20Pointer(ctx sdk.Context, addr common.Address) (token string, version uint16, exists bool) {
+	addrBz, version, exists := k.GetPointerInfo(ctx, types.PointerReverseRegistryKey(addr))
+	if exists {
+		token = string(addrBz)
+	}
+	return
+}
+
 // ERC20 -> Native Token
 func (k *Keeper) DeleteERC20NativePointer(ctx sdk.Context, token string, version uint16) {
 	addr, _, exists := k.GetERC20NativePointer(ctx, token)
