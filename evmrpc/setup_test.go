@@ -51,6 +51,7 @@ const DebugTraceMockHeight = 101
 
 var DebugTraceHashHex = "0x1234567890123456789023456789012345678901234567890123456789000004"
 var DebugTraceBlockHash = "BE17E0261E539CB7E9A91E123A6D794E0163D656FCF9B8EAC07823F7ED28512B"
+var MultiTxBlockHash = "0000000000000000000000000000000000000000000000000000000000000002"
 
 var EncodingConfig = app.MakeEncodingConfig()
 var TxConfig = EncodingConfig.TxConfig
@@ -78,6 +79,10 @@ var TotalTxCount int = 11
 
 var MockBlockID = tmtypes.BlockID{
 	Hash: bytes.HexBytes(mustHexToBytes("0000000000000000000000000000000000000000000000000000000000000001")),
+}
+
+var MockBlockIDMultiTx = tmtypes.BlockID{
+	Hash: bytes.HexBytes(mustHexToBytes(MultiTxBlockHash)),
 }
 
 var NewHeadsCalled = make(chan struct{})
@@ -117,7 +122,7 @@ func mockBlockHeader(height int64) tmtypes.Header {
 func (c *MockClient) mockBlock(height int64) *coretypes.ResultBlock {
 	if height == MultiTxBlockHeight {
 		return &coretypes.ResultBlock{
-			BlockID: MockBlockID,
+			BlockID: MockBlockIDMultiTx,
 			Block: &tmtypes.Block{
 				Header: mockBlockHeader(height),
 				Data: tmtypes.Data{
@@ -250,6 +255,9 @@ func (c *MockClient) Block(_ context.Context, h *int64) (*coretypes.ResultBlock,
 func (c *MockClient) BlockByHash(_ context.Context, hash bytes.HexBytes) (*coretypes.ResultBlock, error) {
 	if hash.String() == DebugTraceBlockHash {
 		return c.mockBlock(DebugTraceMockHeight), nil
+	}
+	if hash.String() == MultiTxBlockHash {
+		return c.mockBlock(MultiTxBlockHeight), nil
 	}
 	return c.mockBlock(MockHeight), nil
 }
