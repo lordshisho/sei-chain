@@ -72,6 +72,32 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 	return genState.Validate()
 }
 
+func (am AppModuleBasic) ValidateGenesisStream(cdc codec.JSONCodec, config client.TxEncodingConfig, genesisCh <-chan json.RawMessage) error {
+	genesisStateCh := make(chan types.GenesisState)
+	var err error
+	doneCh := make(chan struct{})
+	go func() {
+		err = types.ValidateStream(genesisStateCh)
+		doneCh <- struct{}{}
+	}()
+	go func() {
+		defer close(genesisStateCh)
+		for genesis := range genesisCh {
+			var data types.GenesisState
+			err_ := cdc.UnmarshalJSON(genesis, &data)
+			if err_ != nil {
+				err = err_
+				doneCh <- struct{}{}
+				return
+			}
+			genesisStateCh <- data
+		}
+	}()
+	<-doneCh
+	fmt.Println("done with evm validating genesis stream")
+	return err
+}
+
 // RegisterRESTRoutes registers the capability module's REST service handlers.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
@@ -179,6 +205,18 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genState := ExportGenesis(ctx, am.keeper)
 	return cdc.MustMarshalJSON(genState)
+}
+
+func (am AppModule) StreamGenesis(ctx sdk.Context, cdc codec.JSONCodec) <-chan json.RawMessage {
+	ch := ExportGenesisStream(ctx, am.keeper)
+	chRaw := make(chan json.RawMessage)
+	go func() {
+		for genState := range ch {
+			chRaw <- cdc.MustMarshalJSON(genState)
+		}
+		close(chRaw)
+	}()
+	return chRaw
 }
 
 // ConsensusVersion implements ConsensusVersion.

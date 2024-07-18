@@ -2,6 +2,8 @@ package evm
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -81,6 +83,110 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 	}
 
 	return genesis
+}
+
+// TODO: move to better location
+var GENESIS_EXPORT_STREAM_SERIALIZED_LEN_MAX = 1000
+
+func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.GenesisState {
+	ch := make(chan *types.GenesisState)
+	go func() {
+		genesis := types.DefaultGenesis()
+		genesis.Params = k.GetParams(ctx)
+		ch <- genesis
+
+		seiAddrMappingStart := time.Now()
+		k.IterateSeiAddressMapping(ctx, func(evmAddr common.Address, seiAddr sdk.AccAddress) bool {
+			var genesis types.GenesisState
+			genesis.Params = k.GetParams(ctx)
+			genesis.AddressAssociations = append(genesis.AddressAssociations, &types.AddressAssociation{
+				SeiAddress: seiAddr.String(),
+				EthAddress: evmAddr.Hex(),
+			})
+			ch <- &genesis
+			return false
+		})
+		seiAddrMappingEnd := time.Since(seiAddrMappingStart)
+		fmt.Println("IterateSeiAddressMapping time: ", seiAddrMappingEnd)
+
+		codeStart := time.Now()
+		k.IterateAllCode(ctx, func(addr common.Address, code []byte) bool {
+			var genesis types.GenesisState
+			genesis.Params = k.GetParams(ctx)
+			genesis.Codes = append(genesis.Codes, &types.Code{
+				Address: addr.Hex(),
+				Code:    code,
+			})
+			ch <- &genesis
+			return false
+		})
+		codeEnd := time.Since(codeStart)
+		fmt.Println("IterateAllCode time: ", codeEnd)
+
+		stateStart := time.Now()
+		k.IterateState(ctx, func(addr common.Address, key, val common.Hash) bool {
+			var genesis types.GenesisState
+			genesis.Params = k.GetParams(ctx)
+			genesis.States = append(genesis.States, &types.ContractState{
+				Address: addr.Hex(),
+				Key:     key[:],
+				Value:   val[:],
+			})
+			ch <- &genesis
+			return false
+		})
+		stateEnd := time.Since(stateStart)
+		fmt.Println("IterateState time: ", stateEnd)
+
+		nonceStart := time.Now()
+		k.IterateAllNonces(ctx, func(addr common.Address, nonce uint64) bool {
+			var genesis types.GenesisState
+			genesis.Params = k.GetParams(ctx)
+			genesis.Nonces = append(genesis.Nonces, &types.Nonce{
+				Address: addr.Hex(),
+				Nonce:   nonce,
+			})
+			ch <- &genesis
+			return false
+		})
+		nonceEnd := time.Since(nonceStart)
+		fmt.Println("IterateAllNonces time: ", nonceEnd)
+
+		i := 1
+		for _, prefix := range [][]byte{
+			types.ReceiptKeyPrefix,
+			types.BlockBloomPrefix,
+			types.TxHashesPrefix,
+			types.PointerRegistryPrefix,
+			types.PointerCWCodePrefix,
+			types.PointerReverseRegistryPrefix,
+		} {
+			var genesis types.GenesisState
+			genesis.Params = k.GetParams(ctx)
+			serializedStart := time.Now()
+			k.IterateAll(ctx, prefix, func(key, val []byte) bool {
+				genesis.Serialized = append(genesis.Serialized, &types.Serialized{
+					Prefix: prefix,
+					Key:    key,
+					Value:  val,
+				})
+				if len(genesis.Serialized) > GENESIS_EXPORT_STREAM_SERIALIZED_LEN_MAX {
+					ch <- &genesis
+					genesis = types.GenesisState{}
+					genesis.Params = k.GetParams(ctx)
+					fmt.Println("Flushed serialized genesis i = ", i)
+					i += 1
+				}
+				return false
+			})
+			serializedEnd := time.Since(serializedStart)
+			fmt.Println("IterateAll time: ", serializedEnd, " for prefix: ", prefix)
+			fmt.Println("length of genesis.Serialized: ", len(genesis.Serialized))
+			ch <- &genesis
+		}
+		close(ch)
+	}()
+	return ch
 }
 
 // GetGenesisStateFromAppState returns x/evm GenesisState given raw application
