@@ -152,6 +152,7 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 			types.PointerCWCodePrefix,
 			types.PointerReverseRegistryPrefix,
 		} {
+			fmt.Println("current prefix = ", prefix)
 			var genesis types.GenesisState
 			genesis.Params = k.GetParams(ctx)
 			k.IterateAll(ctx, prefix, func(key, val []byte) bool {
@@ -161,7 +162,6 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 					Value:  val,
 				})
 				if len(genesis.Serialized) > GENESIS_EXPORT_STREAM_SERIALIZED_LEN_MAX {
-					fmt.Printf("Sending one prefix into ch, genesis = %+v\n", genesis)
 					ch <- &genesis
 					genesis = types.GenesisState{}
 					genesis.Params = k.GetParams(ctx)
