@@ -2,6 +2,7 @@ package evm
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -93,6 +94,7 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 		genesis.Params = k.GetParams(ctx)
 		ch <- genesis
 
+		fmt.Println("Iterating sei address mappings")
 		k.IterateSeiAddressMapping(ctx, func(evmAddr common.Address, seiAddr sdk.AccAddress) bool {
 			var genesis types.GenesisState
 			genesis.Params = k.GetParams(ctx)
@@ -104,6 +106,7 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 			return false
 		})
 
+		fmt.Println("Iterating all code")
 		k.IterateAllCode(ctx, func(addr common.Address, code []byte) bool {
 			var genesis types.GenesisState
 			genesis.Params = k.GetParams(ctx)
@@ -115,6 +118,7 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 			return false
 		})
 
+		fmt.Println("Iterating all state")
 		k.IterateState(ctx, func(addr common.Address, key, val common.Hash) bool {
 			var genesis types.GenesisState
 			genesis.Params = k.GetParams(ctx)
@@ -127,6 +131,7 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 			return false
 		})
 
+		fmt.Println("Iterating all nonces")
 		k.IterateAllNonces(ctx, func(addr common.Address, nonce uint64) bool {
 			var genesis types.GenesisState
 			genesis.Params = k.GetParams(ctx)
@@ -138,6 +143,7 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 			return false
 		})
 
+		fmt.Println("Iterating prefixes")
 		for _, prefix := range [][]byte{
 			types.ReceiptKeyPrefix,
 			types.BlockBloomPrefix,
@@ -163,6 +169,7 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 			})
 			ch <- &genesis
 		}
+		fmt.Println("done, closing channel")
 		close(ch)
 	}()
 	return ch
