@@ -163,7 +163,6 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 				}
 
 				genesis.Serialized = append(genesis.Serialized, serialized)
-				fmt.Printf("Serialized genesis: %v\n", serialized)
 				if len(genesis.Serialized) > GENESIS_EXPORT_STREAM_SERIALIZED_LEN_MAX {
 					ch <- &genesis
 					genesis = types.GenesisState{}
