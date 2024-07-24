@@ -221,6 +221,11 @@ func (am AppModule) ExportGenesisStream(ctx sdk.Context, cdc codec.JSONCodec) <-
 			if i%10000 == 0 {
 				fmt.Printf("%d\n", i)
 			}
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("x/evm genState that failed to Marshal = %+v\n", genState)
+				}
+			}()
 			gsJson, err := cdc.MarshalJSON(genState)
 			if err != nil {
 				fmt.Printf("x/evm genState that failed to Marshal = %+v\n", genState)
