@@ -156,12 +156,13 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 			var genesis types.GenesisState
 			genesis.Params = k.GetParams(ctx)
 			k.IterateAll(ctx, prefix, func(key, val []byte) bool {
-				fmt.Printf("Prefix key: %s\n", string(key))
+
 				genesis.Serialized = append(genesis.Serialized, &types.Serialized{
 					Prefix: prefix,
 					Key:    key,
 					Value:  val,
 				})
+				fmt.Printf("Prefix key: %v\n", string(key))
 				if len(genesis.Serialized) > GENESIS_EXPORT_STREAM_SERIALIZED_LEN_MAX {
 					ch <- &genesis
 					genesis = types.GenesisState{}
