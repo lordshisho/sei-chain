@@ -138,3 +138,17 @@ func TestNewRevertError(t *testing.T) {
 	require.Equal(t, 3, err.ErrorCode())
 	require.Equal(t, "0x", err.ErrorData())
 }
+
+func TestEthCallHighAmount(t *testing.T) {
+	txArgs := map[string]interface{}{
+		"from":  "0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5",
+		"to":    "0xef31c799B489Db6F27077f624291d365bEc51AB9",
+		"value": "0x1",
+	}
+	overrides := map[string]interface{}{
+		"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5": "{\"balance\": \"0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}",
+	}
+	resObj := sendRequestGood(t, "eth_call", txArgs, "latest", overrides)
+	result := resObj["result"].(string)
+	fmt.Println("result = ", result)
+}
