@@ -212,10 +212,13 @@ func (am AppModule) ExportGenesisStream(ctx sdk.Context, cdc codec.JSONCodec) <-
 	ch := ExportGenesisStream(ctx, am.keeper)
 	chRaw := make(chan json.RawMessage)
 	go func() {
+		i := 0
 		for genState := range ch {
+			i += 1
 			if genState == nil {
 				continue
 			}
+			fmt.Printf("%v: x/evm trying to marshal = %+v\n", i, genState)
 			gsJson, err := cdc.MarshalJSON(genState)
 			if err != nil {
 				fmt.Printf("x/evm genState that failed to Marshal = %+v\n", genState)
