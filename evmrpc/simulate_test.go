@@ -132,6 +132,29 @@ func TestCall(t *testing.T) {
 	Ctx = Ctx.WithBlockHeight(8)
 }
 
+func TestEthCallHighAmount(t *testing.T) {
+	Ctx = Ctx.WithBlockHeight(1)
+
+	_, from := testkeeper.MockAddressPair()
+	_, contractAddr := testkeeper.MockAddressPair()
+	code, err := os.ReadFile("../example/contracts/simplestorage/SimpleStorage.bin")
+	require.Nil(t, err)
+	bz, err := hex.DecodeString(string(code))
+	require.Nil(t, err)
+	abi, err := simplestorage.SimplestorageMetaData.GetAbi()
+	require.Nil(t, err)
+	input, err := abi.Pack("set", big.NewInt(20))
+	require.Nil(t, err)
+	EVMKeeper.SetCode(Ctx, contractAddr, bz)
+	txArgs := `{"from":"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5","to":"0xef31c799B489Db6F27077f624291d365bEc51AB9","value":"0x1"},"latest",{"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5": {"balance": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}}`
+	resObj := sendRequestGood(t, "call", txArgs)
+	fmt.Println("resObj = ", resObj)
+	// result := resObj["result"].(string)
+	// fmt.Println("result = ", result)
+
+	Ctx = Ctx.WithBlockHeight(8)
+}
+
 func TestNewRevertError(t *testing.T) {
 	err := evmrpc.NewRevertError(&core.ExecutionResult{})
 	require.NotNil(t, err)
@@ -139,10 +162,3 @@ func TestNewRevertError(t *testing.T) {
 	require.Equal(t, "0x", err.ErrorData())
 }
 
-func TestEthCallHighAmount(t *testing.T) {
-	txArgs := `{"from":"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5","to":"0xef31c799B489Db6F27077f624291d365bEc51AB9","value":"0x1"},"latest",{"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5": {"balance": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}}`
-	resObj := sendRequestGood(t, "call", txArgs)
-	fmt.Println("resObj = ", resObj)
-	// result := resObj["result"].(string)
-	// fmt.Println("result = ", result)
-}
