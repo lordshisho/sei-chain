@@ -85,7 +85,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 }
 
 // TODO: move to better location
-var GENESIS_EXPORT_STREAM_SERIALIZED_LEN_MAX = 10
+var GENESIS_EXPORT_STREAM_SERIALIZED_LEN_MAX = 1
 
 func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.GenesisState {
 	ch := make(chan *types.GenesisState)
