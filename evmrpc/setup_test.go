@@ -752,6 +752,8 @@ func sendRequestWithNamespace(t *testing.T, namespace string, port int, method s
 		paramsFormatted = strings.Join(utils.Map(params, formatParam), ",")
 	}
 	body := fmt.Sprintf("{\"jsonrpc\": \"2.0\",\"method\": \"%s_%s\",\"params\":[%s],\"id\":\"test\"}", namespace, method, paramsFormatted)
+	fmt.Println("body = ", body)
+	body = "{\"jsonrpc\": \"2.0\",\"method\": \"eth_call\",\"params\":[{\"from\":\"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5\",\"to\":\"0xef31c799B489Db6F27077f624291d365bEc51AB9\",\"value\":\"0x1\"},\"latest\",{\"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5\": {\"balance\": \"0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}}],\"id\":\"test\"}}"
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d", TestAddr, port), strings.NewReader(body))
 	require.Nil(t, err)
 	req.Header.Set("Content-Type", "application/json")

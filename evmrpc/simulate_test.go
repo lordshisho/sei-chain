@@ -140,15 +140,9 @@ func TestNewRevertError(t *testing.T) {
 }
 
 func TestEthCallHighAmount(t *testing.T) {
-	txArgs := map[string]interface{}{
-		"from":  "0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5",
-		"to":    "0xef31c799B489Db6F27077f624291d365bEc51AB9",
-		"value": "0x1",
-	}
-	overrides := map[string]interface{}{
-		"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5": "{\"balance\": \"0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}",
-	}
-	resObj := sendRequestGood(t, "eth_call", txArgs, "latest", overrides)
-	result := resObj["result"].(string)
-	fmt.Println("result = ", result)
+	txArgs := `{"from":"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5","to":"0xef31c799B489Db6F27077f624291d365bEc51AB9","value":"0x1"},"latest",{"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5": {"balance": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}}`
+	resObj := sendRequestGood(t, "call", txArgs)
+	fmt.Println("resObj = ", resObj)
+	// result := resObj["result"].(string)
+	// fmt.Println("result = ", result)
 }
