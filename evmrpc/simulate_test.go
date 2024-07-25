@@ -134,7 +134,6 @@ func TestCall(t *testing.T) {
 
 func TestEthCallHighAmount(t *testing.T) {
 	Ctx = Ctx.WithBlockHeight(1)
-
 	_, from := testkeeper.MockAddressPair()
 	_, contractAddr := testkeeper.MockAddressPair()
 	code, err := os.ReadFile("../example/contracts/simplestorage/SimpleStorage.bin")
@@ -146,8 +145,16 @@ func TestEthCallHighAmount(t *testing.T) {
 	input, err := abi.Pack("set", big.NewInt(20))
 	require.Nil(t, err)
 	EVMKeeper.SetCode(Ctx, contractAddr, bz)
-	txArgs := `{"from":"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5","to":"0xef31c799B489Db6F27077f624291d365bEc51AB9","value":"0x1"},"latest",{"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5": {"balance": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}}`
-	resObj := sendRequestGood(t, "call", txArgs)
+	txArgs := map[string]interface{}{
+		"from":    from.Hex(),
+		"to":      contractAddr.Hex(),
+		"value":   "0x0",
+		"nonce":   "0x2",
+		"chainId": fmt.Sprintf("%#x", EVMKeeper.ChainID(Ctx)),
+		"input":   fmt.Sprintf("%#x", input),
+	}
+	// txArgs := `{"from":"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5","to":"0xef31c799B489Db6F27077f624291d365bEc51AB9","value":"0x1"},"latest",{"0x7647DD2a41f96f4eAD50cbfb70D48E796e2450A5": {"balance": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}}`
+	resObj := sendRequestGood(t, "call", txArgs, nil, map[string]interface{}{}, map[string]interface{}{})
 	fmt.Println("resObj = ", resObj)
 	// result := resObj["result"].(string)
 	// fmt.Println("result = ", result)
@@ -161,4 +168,3 @@ func TestNewRevertError(t *testing.T) {
 	require.Equal(t, 3, err.ErrorCode())
 	require.Equal(t, "0x", err.ErrorData())
 }
-
