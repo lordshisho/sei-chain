@@ -94,56 +94,56 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 		genesis.Params = k.GetParams(ctx)
 		ch <- genesis
 
-		//fmt.Println("Iterating sei address mappings")
-		//k.IterateSeiAddressMapping(ctx, func(evmAddr common.Address, seiAddr sdk.AccAddress) bool {
-		//	var genesis types.GenesisState
-		//	genesis.Params = k.GetParams(ctx)
-		//	genesis.AddressAssociations = append(genesis.AddressAssociations, &types.AddressAssociation{
-		//		SeiAddress: seiAddr.String(),
-		//		EthAddress: evmAddr.Hex(),
-		//	})
-		//	ch <- &genesis
-		//	return false
-		//})
-		//
-		//fmt.Println("Iterating all code")
-		//k.IterateAllCode(ctx, func(addr common.Address, code []byte) bool {
-		//	var genesis types.GenesisState
-		//	genesis.Params = k.GetParams(ctx)
-		//	genesis.Codes = append(genesis.Codes, &types.Code{
-		//		Address: addr.Hex(),
-		//		Code:    code,
-		//	})
-		//	ch <- &genesis
-		//	return false
-		//})
-		//
-		//fmt.Println("Iterating all state")
-		//k.IterateState(ctx, func(addr common.Address, key, val common.Hash) bool {
-		//	var genesis types.GenesisState
-		//	genesis.Params = k.GetParams(ctx)
-		//	genesis.States = append(genesis.States, &types.ContractState{
-		//		Address: addr.Hex(),
-		//		Key:     key[:],
-		//		Value:   val[:],
-		//	})
-		//	ch <- &genesis
-		//	return false
-		//})
-		//
-		//fmt.Println("Iterating all nonces")
-		//k.IterateAllNonces(ctx, func(addr common.Address, nonce uint64) bool {
-		//	var genesis types.GenesisState
-		//	genesis.Params = k.GetParams(ctx)
-		//	genesis.Nonces = append(genesis.Nonces, &types.Nonce{
-		//		Address: addr.Hex(),
-		//		Nonce:   nonce,
-		//	})
-		//	ch <- &genesis
-		//	return false
-		//})
+		fmt.Println("Exporting EVM: Iterating over sei address mappings")
+		k.IterateSeiAddressMapping(ctx, func(evmAddr common.Address, seiAddr sdk.AccAddress) bool {
+			var genesis types.GenesisState
+			genesis.Params = k.GetParams(ctx)
+			genesis.AddressAssociations = append(genesis.AddressAssociations, &types.AddressAssociation{
+				SeiAddress: seiAddr.String(),
+				EthAddress: evmAddr.Hex(),
+			})
+			ch <- &genesis
+			return false
+		})
 
-		fmt.Println("Iterating prefixes")
+		fmt.Println("Exporting EVM: Iterating all code")
+		k.IterateAllCode(ctx, func(addr common.Address, code []byte) bool {
+			var genesis types.GenesisState
+			genesis.Params = k.GetParams(ctx)
+			genesis.Codes = append(genesis.Codes, &types.Code{
+				Address: addr.Hex(),
+				Code:    code,
+			})
+			ch <- &genesis
+			return false
+		})
+
+		fmt.Println("Exporting EVM: Iterating all state")
+		k.IterateState(ctx, func(addr common.Address, key, val common.Hash) bool {
+			var genesis types.GenesisState
+			genesis.Params = k.GetParams(ctx)
+			genesis.States = append(genesis.States, &types.ContractState{
+				Address: addr.Hex(),
+				Key:     key[:],
+				Value:   val[:],
+			})
+			ch <- &genesis
+			return false
+		})
+
+		fmt.Println("Exporting EVM: Iterating all nonces")
+		k.IterateAllNonces(ctx, func(addr common.Address, nonce uint64) bool {
+			var genesis types.GenesisState
+			genesis.Params = k.GetParams(ctx)
+			genesis.Nonces = append(genesis.Nonces, &types.Nonce{
+				Address: addr.Hex(),
+				Nonce:   nonce,
+			})
+			ch <- &genesis
+			return false
+		})
+
+		fmt.Println("Exporting EVM: Iterating over other prefixes")
 		for _, prefix := range [][]byte{
 			types.ReceiptKeyPrefix,
 			types.BlockBloomPrefix,
@@ -152,7 +152,7 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 			types.PointerCWCodePrefix,
 			types.PointerReverseRegistryPrefix,
 		} {
-			fmt.Println("current prefix = ", prefix)
+			fmt.Println("Exporting EVM: Exporting prefix: ", prefix)
 			genesis := types.DefaultGenesis()
 			genesis.Params = k.GetParams(ctx)
 			k.IterateAll(ctx, prefix, func(key, val []byte) bool {
@@ -172,7 +172,7 @@ func ExportGenesisStream(ctx sdk.Context, k *keeper.Keeper) <-chan *types.Genesi
 			})
 			ch <- genesis
 		}
-		fmt.Println("done, closing channel")
+		fmt.Println("Done exporting EVM")
 		close(ch)
 	}()
 	return ch
