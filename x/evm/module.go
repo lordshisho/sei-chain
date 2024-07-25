@@ -211,6 +211,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (am AppModule) ExportGenesisStream(ctx sdk.Context, cdc codec.JSONCodec) <-chan json.RawMessage {
 	ch := ExportGenesisStream(ctx, am.keeper)
 	chRaw := make(chan json.RawMessage)
+	var prevGenState *types.GenesisState
 	go func() {
 		i := 0
 		for genState := range ch {
@@ -223,6 +224,7 @@ func (am AppModule) ExportGenesisStream(ctx sdk.Context, cdc codec.JSONCodec) <-
 			}
 			defer func() {
 				if r := recover(); r != nil {
+					fmt.Printf("x/evm prevGenState = %+v\n", prevGenState)
 					fmt.Printf("x/evm genState that failed to Marshal = %+v\n", genState)
 				}
 			}()
@@ -231,6 +233,7 @@ func (am AppModule) ExportGenesisStream(ctx sdk.Context, cdc codec.JSONCodec) <-
 				fmt.Printf("x/evm genState that failed to Marshal = %+v\n", genState)
 				continue
 			}
+			prevGenState = genState
 			chRaw <- gsJson
 		}
 		close(chRaw)
