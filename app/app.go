@@ -622,7 +622,7 @@ func New(
 	ssConfig.DBDirectory = receiptStorePath
 	ssConfig.KeepLastVersion = false
 	if app.receiptStore == nil {
-		app.receiptStore, err = ss.NewStateStore(logger, receiptStorePath, ssConfig)
+		app.receiptStore, err = ss.NewStateStore(logger, homePath, ssConfig)
 		if err != nil {
 			panic(fmt.Sprintf("error while creating receipt store: %s", err))
 		}
@@ -1927,6 +1927,7 @@ func (app *App) checkTotalBlockGasWanted(ctx sdk.Context, txs [][]byte) bool {
 		}
 		// Check for overflow before adding
 		gasWanted := feeTx.GetGas()
+		fmt.Printf("[ChainDebug] GasWanted is %d and block max gas is %d at height %d\n", gasWanted, ctx.ConsensusParams().Block.MaxGas, ctx.BlockHeight())
 		if int64(gasWanted) < 0 || int64(totalGasWanted) > math.MaxInt64-int64(gasWanted) {
 			return false
 		}
