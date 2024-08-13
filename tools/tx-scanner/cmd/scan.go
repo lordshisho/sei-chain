@@ -24,6 +24,7 @@ func ScanCmd() *cobra.Command {
 	cmd.PersistentFlags().Int("batch-size", 100, "Batch size to query")
 	cmd.PersistentFlags().Int("bps-limit", 400, "Blocks per second limit")
 	cmd.PersistentFlags().Int64("start-height", 0, "Start height")
+	cmd.PersistentFlags().Int64("end-height", 0, "End height")
 	cmd.PersistentFlags().String("state-dir", "", "State file directory, the scanner will record the last scanned offset and scan results")
 	return cmd
 }
@@ -35,6 +36,7 @@ func execute(cmd *cobra.Command, _ []string) {
 	batchSize, _ := cmd.Flags().GetInt("batch-size")
 	stateDir, _ := cmd.Flags().GetString("state-dir")
 	startHeight, _ := cmd.Flags().GetInt64("start-height")
+	endHeight, _ := cmd.Flags().GetInt64("end-height")
 	var badBlocks []int64
 	var currentState = state.State{}
 	if batchSize > bpsLimit {
@@ -58,6 +60,9 @@ func execute(cmd *cobra.Command, _ []string) {
 	latestHeight := getLatestBlockHeight()
 	var currBlockHeight = startHeight
 	for {
+		if endHeight > 0 && currBlockHeight > endHeight {
+			break
+		}
 		if currBlockHeight >= latestHeight {
 			time.Sleep(10 * time.Second)
 			latestHeight = getLatestBlockHeight()
@@ -112,33 +117,17 @@ func execute(cmd *cobra.Command, _ []string) {
 
 // processBlock processes a single block to find missing transactions
 func processBlock(height int64) (bool, error) {
-	if height%1000 == 0 {
-		fmt.Printf("Processing block height %d\n", height)
-	}
-	// Query the block to get the number of TXs
-	blockResp, err := query.GetBlockByHeight(height)
-	if err != nil {
-		return false, err
-	}
-	numTxInBlock := len(blockResp.Block.Data.Txs)
 	// Get all indexed TXs events
-	txResp, err := query.GetTxsEvent(height)
+	txResponse, err := query.GetTxsEvent(height)
 	if err != nil {
 		return false, err
 	}
-	numTxIndexed := len(txResp.Txs)
-	// Check if the number matches
-	if numTxIndexed == 0 && numTxIndexed != numTxInBlock {
-		fmt.Printf("[Fatal] Missing TXs at block height %d\n", height)
-		return true, nil
-	}
-	// Now make sure each TX does exist
-	for _, resp := range txResp.TxResponses {
-		hash := resp.TxHash
-		txByHashResponse, err := query.GetTxByHash(hash)
-		if err != nil || txByHashResponse.TxResponse == nil || txByHashResponse.TxResponse.TxHash != hash {
-			fmt.Printf("[Fatal] Failed to find transaction hash %s at block height %d \n", hash, height)
-			return true, nil
+	for _, resp := range txResponse.TxResponses {
+		txHash := resp.TxHash
+		gasWanted := resp.GasWanted
+		gasUsed := resp.GasUsed
+		if gasWanted >= 1000000 {
+			fmt.Printf("High gas tx with gasWanted: %d, gasUsed: %d, txHash: %s, at height: %d\n", gasWanted, gasUsed, txHash, height)
 		}
 	}
 	return false, nil
