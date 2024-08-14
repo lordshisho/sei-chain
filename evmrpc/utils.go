@@ -194,5 +194,6 @@ func bankExists(ctx sdk.Context, k *keeper.Keeper) bool {
 }
 
 func evmExists(ctx sdk.Context, k *keeper.Keeper) bool {
+	fmt.Printf("[Debug] SS store for height %d version exist: %v\n", ctx.BlockHeight(), ctx.KVStore(k.GetStoreKey()).VersionExists(ctx.BlockHeight()))
 	return ctx.KVStore(k.GetStoreKey()).VersionExists(ctx.BlockHeight())
 }

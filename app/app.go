@@ -1907,6 +1907,7 @@ func RegisterSwaggerAPI(rtr *mux.Router) {
 func (app *App) checkTotalBlockGasWanted(ctx sdk.Context, txs [][]byte) bool {
 	totalGasWanted := uint64(0)
 	for _, tx := range txs {
+
 		decoded, err := app.txDecoder(tx)
 		if err != nil {
 			// such tx will not be processed and thus won't consume gas. Skipping
@@ -1927,7 +1928,8 @@ func (app *App) checkTotalBlockGasWanted(ctx sdk.Context, txs [][]byte) bool {
 		}
 		// Check for overflow before adding
 		gasWanted := feeTx.GetGas()
-		fmt.Printf("[ChainDebug] GasWanted is %d and block max gas is %d at height %d\n", gasWanted, ctx.ConsensusParams().Block.MaxGas, ctx.BlockHeight())
+		fmt.Printf("[Debug] ")
+		fmt.Printf("[Debug] GasWanted is %d and block max gas is %d at height %d\n", gasWanted, ctx.ConsensusParams().Block.MaxGas, ctx.BlockHeight())
 		if int64(gasWanted) < 0 || int64(totalGasWanted) > math.MaxInt64-int64(gasWanted) {
 			return false
 		}

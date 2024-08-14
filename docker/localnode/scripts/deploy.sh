@@ -67,7 +67,7 @@ sleep 5
 echo "All $CLUSTER_SIZE Nodes started successfully, starting oracle price feeder..."
 
 # Step 6: Start oracle price feeder
-/usr/bin/start_price_feeder.sh
-echo "Oracle price feeder is started"
+#/usr/bin/start_price_feeder.sh
+#echo "Oracle price feeder is started"
 
 tail -f /dev/null

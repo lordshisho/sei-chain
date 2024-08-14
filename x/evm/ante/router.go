@@ -2,6 +2,7 @@ package ante
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkacltypes "github.com/cosmos/cosmos-sdk/types/accesscontrol"
@@ -31,12 +32,14 @@ func NewEVMRouterDecorator(
 }
 
 func (r EVMRouterDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+	fmt.Printf("[Debug] I'm in EVMRouterDecorator\n")
 	if isEVM, err := IsEVMMessage(tx); err != nil {
 		return ctx, err
 	} else if isEVM {
+		fmt.Printf("[Debug] This is an EVM message, using evmAnteHandler\n")
 		return r.evmAnteHandler(ctx, tx, simulate)
 	}
-
+	fmt.Printf("[Debug] This is not EVM message, using defaultAnteHandler\n")
 	return r.defaultAnteHandler(ctx, tx, simulate)
 }
 
@@ -44,6 +47,7 @@ func (r EVMRouterDecorator) AnteDeps(txDeps []sdkacltypes.AccessOperation, tx sd
 	if isEVM, err := IsEVMMessage(tx); err != nil {
 		return nil, err
 	} else if isEVM {
+
 		return r.evmAnteDepGenerator(txDeps, tx, txIndex)
 	}
 
