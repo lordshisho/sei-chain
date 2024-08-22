@@ -78,6 +78,7 @@ func (a *App) RunBlock(txs []signing.Tx) []*types.ExecTxResult {
 		if err != nil {
 			panic(err)
 		}
+
 		hash := make([]byte, 32)
 		_, err = rand.Read(hash)
 		if err != nil {
@@ -91,12 +92,19 @@ func (a *App) RunBlock(txs []signing.Tx) []*types.ExecTxResult {
 			Height:          a.height,
 			Time:            a.lastCtx.BlockTime(),
 			ProposerAddress: a.lastCtx.BlockHeader().ProposerAddress,
+			ValidatorsHash:  hash,
 			LastCommitHash:  hash,
 			LastBlockId: tmproto.BlockID{
 				Hash: hash,
 			},
-		})
+		}).WithHeaderHash(hash)
 	}()
+
+	hash := make([]byte, 32)
+	_, err := rand.Read(hash)
+	if err != nil {
+		panic(err)
+	}
 
 	res, err := a.FinalizeBlock(context.Background(), &types.RequestFinalizeBlock{
 		Txs: utils.Map(txs, func(tx signing.Tx) []byte {
@@ -115,10 +123,16 @@ func (a *App) RunBlock(txs []signing.Tx) []*types.ExecTxResult {
 		Height:              a.height,
 		ProposerAddress:     getValAddress(a.GetProposer()),
 		Time:                time.Now(),
+		ValidatorsHash:      hash,
+		LastCommitHash:      hash,
 	})
 	if err != nil {
 		panic(err)
 	}
+
+	a.EndBlock(a.lastCtx, types.RequestEndBlock{
+		Height: a.height,
+	})
 
 	return res.TxResults
 }

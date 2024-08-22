@@ -799,7 +799,6 @@ func TestBlockHashes(t *testing.T) {
 
 	for i := 0; i < 15; i++ {
 		app.RunBlock(nil)
-		fmt.Println(app.Ctx().BlockHeader().LastBlockId.Hash)
 	}
 
 	ethCfg := types.DefaultChainConfig().EthereumConfig(config.GetEVMChainID(app.ChainID))
