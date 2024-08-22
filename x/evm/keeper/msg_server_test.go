@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"os"
 	"testing"
@@ -16,10 +17,15 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/sei-protocol/sei-chain/example/contracts/blockinfo"
 	"github.com/sei-protocol/sei-chain/example/contracts/echo"
 	"github.com/sei-protocol/sei-chain/example/contracts/sendall"
 	"github.com/sei-protocol/sei-chain/example/contracts/simplestorage"
 	testkeeper "github.com/sei-protocol/sei-chain/testutil/keeper"
+	"github.com/sei-protocol/sei-chain/testutil/processblock"
 	"github.com/sei-protocol/sei-chain/x/evm/ante"
 	"github.com/sei-protocol/sei-chain/x/evm/artifacts/erc20"
 	"github.com/sei-protocol/sei-chain/x/evm/artifacts/erc721"
@@ -27,8 +33,6 @@ import (
 	"github.com/sei-protocol/sei-chain/x/evm/state"
 	"github.com/sei-protocol/sei-chain/x/evm/types"
 	"github.com/sei-protocol/sei-chain/x/evm/types/ethtx"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type mockTx struct {
@@ -783,4 +787,104 @@ func TestAssociate(t *testing.T) {
 
 	res = testkeeper.EVMTestApp.DeliverTx(ctx, abci.RequestDeliverTx{Tx: txbz}, sdktx, sha256.Sum256(txbz))
 	require.Equal(t, uint32(0), res.Code)
+}
+
+func TestBlockHashes(t *testing.T) {
+	requireT := require.New(t)
+
+	app := processblock.NewTestApp()
+	p := processblock.CommonPreset(app)
+
+	app.RunBlock(p.AdminSign())
+
+	k, ctx := testkeeper.MockEVMKeeper()
+	code, err := os.ReadFile("../../../example/contracts/blockinfo/BlockInfo.bin")
+	requireT.Nil(err)
+	bz, err := hex.DecodeString(string(code))
+	requireT.NoError(err)
+
+	privKey := testkeeper.MockPrivateKey()
+	testPrivHex := hex.EncodeToString(privKey.Bytes())
+	key, _ := crypto.HexToECDSA(testPrivHex)
+	_, evmAddr := testkeeper.PrivateKeyToAddresses(privKey)
+
+	amt := sdk.NewCoin(k.GetBaseDenom(ctx), sdk.NewInt(10000000))
+	requireT.NoError(k.BankKeeper().MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(k.GetBaseDenom(ctx), amt.Amount))))
+	requireT.NoError(k.BankKeeper().SendCoinsFromModuleToAccount(ctx, types.ModuleName, evmAddr[:], sdk.NewCoins(amt)))
+
+	chainID := k.ChainID(ctx)
+	chainCfg := types.DefaultChainConfig()
+	ethCfg := chainCfg.EthereumConfig(chainID)
+	blockNum := big.NewInt(ctx.BlockHeight())
+
+	signer := ethtypes.MakeSigner(ethCfg, blockNum, uint64(ctx.BlockTime().Unix()))
+	txData := ethtypes.LegacyTx{
+		GasPrice: big.NewInt(1000000000000),
+		Gas:      2000000,
+		To:       nil,
+		Value:    big.NewInt(0),
+		Data:     bz,
+		Nonce:    0,
+	}
+	tx, err := ethtypes.SignTx(ethtypes.NewTx(&txData), signer, key)
+	requireT.NoError(err)
+	txwrapper, err := ethtx.NewLegacyTx(tx)
+	requireT.NoError(err)
+	req, err := types.NewMsgEVMTransaction(txwrapper)
+	requireT.NoError(err)
+
+	msgServer := keeper.NewMsgServerImpl(k)
+
+	// Deploy BlockInfo contract
+
+	requireT.NoError(ante.Preprocess(ctx, req))
+	ctx, err = ante.NewEVMFeeCheckDecorator(k).AnteHandle(ctx, mockTx{msgs: []sdk.Msg{req}}, false, func(sdk.Context, sdk.Tx, bool) (sdk.Context, error) {
+		return ctx, nil
+	})
+	requireT.NoError(err)
+	res, err := msgServer.EVMTransaction(sdk.WrapSDKContext(ctx), req)
+	requireT.NoError(err)
+	requireT.NoError(k.FlushTransientReceipts(ctx))
+	receipt, err := k.GetReceipt(ctx, common.HexToHash(res.Hash))
+	requireT.NoError(err)
+	requireT.NotNil(receipt)
+	requireT.Equal(uint32(ethtypes.ReceiptStatusSuccessful), receipt.Status)
+
+	// Call getBlockInfo
+
+	contractAddr := common.HexToAddress(receipt.ContractAddress)
+	abi, err := blockinfo.BlockinfoMetaData.GetAbi()
+	requireT.NoError(err)
+	bz, err = abi.Pack("getBlockInfo")
+	requireT.NoError(err)
+	txData = ethtypes.LegacyTx{
+		GasPrice: big.NewInt(1000000000000),
+		Gas:      200000,
+		To:       &contractAddr,
+		Value:    big.NewInt(0),
+		Data:     bz,
+		Nonce:    1,
+	}
+	tx, err = ethtypes.SignTx(ethtypes.NewTx(&txData), signer, key)
+	requireT.NoError(err)
+	txwrapper, err = ethtx.NewLegacyTx(tx)
+	requireT.NoError(err)
+	req, err = types.NewMsgEVMTransaction(txwrapper)
+	requireT.NoError(err)
+	requireT.NoError(ante.Preprocess(ctx, req))
+	ctx, err = ante.NewEVMFeeCheckDecorator(k).AnteHandle(ctx, mockTx{msgs: []sdk.Msg{req}}, false, func(sdk.Context, sdk.Tx, bool) (sdk.Context, error) {
+		return ctx, nil
+	})
+	requireT.NoError(err)
+	res, err = msgServer.EVMTransaction(sdk.WrapSDKContext(ctx), req)
+	requireT.NoError(err)
+	requireT.NoError(k.FlushTransientReceipts(ctx))
+	receipt, err = k.GetReceipt(ctx, common.HexToHash(res.Hash))
+	requireT.NoError(err)
+	requireT.NotNil(receipt)
+	requireT.Equal(uint32(ethtypes.ReceiptStatusSuccessful), receipt.Status)
+
+	decoded, err := abi.Unpack("getBlockInfo", res.ReturnData)
+	requireT.NoError(err)
+	fmt.Printf("%#v\n", decoded)
 }

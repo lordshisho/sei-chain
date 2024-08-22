@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/sei-protocol/sei-chain/app"
 	evmkeeper "github.com/sei-protocol/sei-chain/x/evm/keeper"
@@ -51,8 +52,22 @@ func MockEVMKeeperWithPrecompiles() (*evmkeeper.Keeper, sdk.Context) {
 }
 
 func MockEVMKeeper() (*evmkeeper.Keeper, sdk.Context) {
+	const currentBlock = 20
 	testApp := app.Setup(false, false)
-	ctx := testApp.GetContextForDeliverTx([]byte{}).WithBlockHeight(8).WithBlockTime(time.Now())
+	ctx := testApp.GetContextForDeliverTx([]byte{})
+	for i := int64(1); i < currentBlock; i++ {
+		ctx = ctx.WithBlockHeight(1).WithBlockTime(time.Now())
+		req := &abci.RequestFinalizeBlock{
+			Height: i,
+		}
+		testApp.ProcessBlock(
+			ctx,
+			nil,
+			req,
+			req.DecidedLastCommit,
+		)
+	}
+
 	k := testApp.EvmKeeper
 	k.InitGenesis(ctx, *evmtypes.DefaultGenesis())
 
