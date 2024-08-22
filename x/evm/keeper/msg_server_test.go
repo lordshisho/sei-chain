@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/sei-protocol/sei-chain/x/evm/ante"
 	"github.com/sei-protocol/sei-chain/x/evm/artifacts/erc20"
 	"github.com/sei-protocol/sei-chain/x/evm/artifacts/erc721"
+	"github.com/sei-protocol/sei-chain/x/evm/config"
 	"github.com/sei-protocol/sei-chain/x/evm/keeper"
 	"github.com/sei-protocol/sei-chain/x/evm/state"
 	"github.com/sei-protocol/sei-chain/x/evm/types"
@@ -795,30 +797,20 @@ func TestBlockHashes(t *testing.T) {
 	app := processblock.NewTestApp()
 	p := processblock.CommonPreset(app)
 
-	app.RunBlock(p.AdminSign())
+	for i := 0; i < 15; i++ {
+		app.RunBlock(nil)
+		fmt.Println(app.Ctx().BlockHeader().LastBlockId.Hash)
+	}
 
-	k, ctx := testkeeper.MockEVMKeeper()
+	ethCfg := types.DefaultChainConfig().EthereumConfig(config.GetEVMChainID(app.ChainID))
+	signer := ethtypes.MakeSigner(ethCfg, big.NewInt(app.Ctx().BlockHeight()), uint64(app.Ctx().BlockTime().Unix()))
+
 	code, err := os.ReadFile("../../../example/contracts/blockinfo/BlockInfo.bin")
 	requireT.Nil(err)
 	bz, err := hex.DecodeString(string(code))
 	requireT.NoError(err)
 
-	privKey := testkeeper.MockPrivateKey()
-	testPrivHex := hex.EncodeToString(privKey.Bytes())
-	key, _ := crypto.HexToECDSA(testPrivHex)
-	_, evmAddr := testkeeper.PrivateKeyToAddresses(privKey)
-
-	amt := sdk.NewCoin(k.GetBaseDenom(ctx), sdk.NewInt(10000000))
-	requireT.NoError(k.BankKeeper().MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(k.GetBaseDenom(ctx), amt.Amount))))
-	requireT.NoError(k.BankKeeper().SendCoinsFromModuleToAccount(ctx, types.ModuleName, evmAddr[:], sdk.NewCoins(amt)))
-
-	chainID := k.ChainID(ctx)
-	chainCfg := types.DefaultChainConfig()
-	ethCfg := chainCfg.EthereumConfig(chainID)
-	blockNum := big.NewInt(ctx.BlockHeight())
-
-	signer := ethtypes.MakeSigner(ethCfg, blockNum, uint64(ctx.BlockTime().Unix()))
-	txData := ethtypes.LegacyTx{
+	instantiateTxData := ethtypes.LegacyTx{
 		GasPrice: big.NewInt(1000000000000),
 		Gas:      2000000,
 		To:       nil,
@@ -826,38 +818,29 @@ func TestBlockHashes(t *testing.T) {
 		Data:     bz,
 		Nonce:    0,
 	}
-	tx, err := ethtypes.SignTx(ethtypes.NewTx(&txData), signer, key)
-	requireT.NoError(err)
-	txwrapper, err := ethtx.NewLegacyTx(tx)
-	requireT.NoError(err)
-	req, err := types.NewMsgEVMTransaction(txwrapper)
-	requireT.NoError(err)
 
-	msgServer := keeper.NewMsgServerImpl(k)
-
-	// Deploy BlockInfo contract
-
-	requireT.NoError(ante.Preprocess(ctx, req))
-	ctx, err = ante.NewEVMFeeCheckDecorator(k).AnteHandle(ctx, mockTx{msgs: []sdk.Msg{req}}, false, func(sdk.Context, sdk.Tx, bool) (sdk.Context, error) {
-		return ctx, nil
+	res := app.RunBlock([]authsigning.Tx{
+		p.AdminSign(app, evmTxToCosmosMsg(requireT, instantiateTxData, p.AdminKey(app), signer)),
 	})
-	requireT.NoError(err)
-	res, err := msgServer.EVMTransaction(sdk.WrapSDKContext(ctx), req)
-	requireT.NoError(err)
-	requireT.NoError(k.FlushTransientReceipts(ctx))
-	receipt, err := k.GetReceipt(ctx, common.HexToHash(res.Hash))
-	requireT.NoError(err)
-	requireT.NotNil(receipt)
-	requireT.Equal(uint32(ethtypes.ReceiptStatusSuccessful), receipt.Status)
+	requireT.Len(res, 1)
+	requireT.EqualValues(0, res[0].Code)
 
-	// Call getBlockInfo
+	resp := &sdk.TxMsgData{}
+	requireT.NoError(proto.Unmarshal(res[0].Data, resp))
+
+	typedResp := &types.MsgEVMTransactionResponse{}
+	requireT.NoError(proto.Unmarshal(resp.Data[0].Data, typedResp))
+
+	receipt, err := app.EvmKeeper.GetReceipt(app.Ctx(), common.HexToHash(typedResp.Hash))
+	requireT.NoError(err)
 
 	contractAddr := common.HexToAddress(receipt.ContractAddress)
 	abi, err := blockinfo.BlockinfoMetaData.GetAbi()
 	requireT.NoError(err)
+
 	bz, err = abi.Pack("getBlockInfo")
 	requireT.NoError(err)
-	txData = ethtypes.LegacyTx{
+	callTxData := ethtypes.LegacyTx{
 		GasPrice: big.NewInt(1000000000000),
 		Gas:      200000,
 		To:       &contractAddr,
@@ -865,26 +848,38 @@ func TestBlockHashes(t *testing.T) {
 		Data:     bz,
 		Nonce:    1,
 	}
-	tx, err = ethtypes.SignTx(ethtypes.NewTx(&txData), signer, key)
-	requireT.NoError(err)
-	txwrapper, err = ethtx.NewLegacyTx(tx)
-	requireT.NoError(err)
-	req, err = types.NewMsgEVMTransaction(txwrapper)
-	requireT.NoError(err)
-	requireT.NoError(ante.Preprocess(ctx, req))
-	ctx, err = ante.NewEVMFeeCheckDecorator(k).AnteHandle(ctx, mockTx{msgs: []sdk.Msg{req}}, false, func(sdk.Context, sdk.Tx, bool) (sdk.Context, error) {
-		return ctx, nil
-	})
-	requireT.NoError(err)
-	res, err = msgServer.EVMTransaction(sdk.WrapSDKContext(ctx), req)
-	requireT.NoError(err)
-	requireT.NoError(k.FlushTransientReceipts(ctx))
-	receipt, err = k.GetReceipt(ctx, common.HexToHash(res.Hash))
-	requireT.NoError(err)
-	requireT.NotNil(receipt)
-	requireT.Equal(uint32(ethtypes.ReceiptStatusSuccessful), receipt.Status)
 
-	decoded, err := abi.Unpack("getBlockInfo", res.ReturnData)
+	res = app.RunBlock([]authsigning.Tx{
+		p.AdminSign(app, evmTxToCosmosMsg(requireT, callTxData, p.AdminKey(app), signer)),
+	})
+	requireT.Len(res, 1)
+	requireT.EqualValues(0, res[0].Code)
+
+	resp = &sdk.TxMsgData{}
+	requireT.NoError(proto.Unmarshal(res[0].Data, resp))
+
+	typedResp = &types.MsgEVMTransactionResponse{}
+	requireT.NoError(proto.Unmarshal(resp.Data[0].Data, typedResp))
+
+	decoded, err := abi.Unpack("getBlockInfo", typedResp.ReturnData)
 	requireT.NoError(err)
 	fmt.Printf("%#v\n", decoded)
+}
+
+func evmTxToCosmosMsg(
+	requireT *require.Assertions,
+	txData ethtypes.LegacyTx,
+	key cryptotypes.PrivKey,
+	signer ethtypes.Signer,
+) *types.MsgEVMTransaction {
+	ethKey, err := crypto.HexToECDSA(hex.EncodeToString(key.Bytes()))
+	requireT.NoError(err)
+	tx, err := ethtypes.SignTx(ethtypes.NewTx(&txData), signer, ethKey)
+	requireT.NoError(err)
+	txwrapper, err := ethtx.NewLegacyTx(tx)
+	requireT.NoError(err)
+	req, err := types.NewMsgEVMTransaction(txwrapper)
+	requireT.NoError(err)
+
+	return req
 }

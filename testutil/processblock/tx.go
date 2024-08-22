@@ -30,7 +30,7 @@ func (a *App) Sign(account sdk.AccAddress, fee int64, msgs ...sdk.Msg) xauthsign
 	if delta, ok := a.accToSeqDelta[account.String()]; ok {
 		seqNum += delta
 	}
-	privKey := GetKey(a.accToMnemonic[account.String()])
+	privKey := a.GetKey(account)
 
 	signerData := xauthsigning.SignerData{
 		ChainID:       "tendermint_test",
@@ -79,10 +79,10 @@ func (a *App) Sign(account sdk.AccAddress, fee int64, msgs ...sdk.Msg) xauthsign
 	return txBuilder.GetTx()
 }
 
-func GetKey(mnemonic string) cryptotypes.PrivKey {
+func (a *App) GetKey(account sdk.AccAddress) cryptotypes.PrivKey {
 	algo := hd.Secp256k1
 	hdpath := hd.CreateHDPath(sdk.GetConfig().GetCoinType(), 0, 0).String()
-	derivedPriv, _ := algo.Derive()(mnemonic, "", hdpath)
+	derivedPriv, _ := algo.Derive()(a.accToMnemonic[account.String()], "", hdpath)
 	privKey := algo.Generate()(derivedPriv)
 
 	return privKey

@@ -4,11 +4,13 @@ import (
 	"fmt"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	minttypes "github.com/sei-protocol/sei-chain/x/mint/types"
 )
 
@@ -52,4 +54,8 @@ func CommonPreset(app *App) *Preset {
 // always with enough fee
 func (p *Preset) AdminSign(app *App, msgs ...sdk.Msg) signing.Tx {
 	return app.Sign(p.Admin, 10000000, msgs...)
+}
+
+func (p *Preset) AdminKey(app *App) cryptotypes.PrivKey {
+	return app.GetKey(p.Admin)
 }

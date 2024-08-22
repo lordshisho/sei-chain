@@ -15,10 +15,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
-	"github.com/sei-protocol/sei-chain/app"
-	"github.com/sei-protocol/sei-chain/utils"
 	"github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/sei-protocol/sei-chain/app"
+	"github.com/sei-protocol/sei-chain/testutil/keeper"
+	"github.com/sei-protocol/sei-chain/utils"
 )
 
 type App struct {
@@ -68,16 +71,31 @@ func (a *App) Ctx() sdk.Context {
 // Processes and commits a block of transactions, and return a list of response codes.
 // Assumes all validators voted with equal weight, and there are no byzantine validators.
 // Proposer is rotated among all validators round-robin.
-func (a *App) RunBlock(txs []signing.Tx) (resultCodes []uint32) {
+func (a *App) RunBlock(txs []signing.Tx) []*types.ExecTxResult {
 	defer func() {
 		a.lastCtx = a.GetContextForDeliverTx([]byte{}) // Commit will set deliver tx ctx to nil so we need to cache it here for testing queries before the next block is FinalizeBlock'ed (which will set deliver tx ctx)
 		_, err := a.Commit(context.Background())
 		if err != nil {
 			panic(err)
 		}
+		hash := make([]byte, 32)
+		_, err = rand.Read(hash)
+		if err != nil {
+			panic(err)
+		}
 		a.accToSeqDelta = map[string]uint64{}
 		a.height++
 		a.proposer = (a.proposer + 1) % len(a.GetAllValidators())
+		a.lastCtx = a.lastCtx.WithBlockHeader(tmproto.Header{
+			ChainID:         a.ChainID,
+			Height:          a.height,
+			Time:            a.lastCtx.BlockTime(),
+			ProposerAddress: a.lastCtx.BlockHeader().ProposerAddress,
+			LastCommitHash:  hash,
+			LastBlockId: tmproto.BlockID{
+				Hash: hash,
+			},
+		})
 	}()
 
 	res, err := a.FinalizeBlock(context.Background(), &types.RequestFinalizeBlock{
@@ -101,7 +119,8 @@ func (a *App) RunBlock(txs []signing.Tx) (resultCodes []uint32) {
 	if err != nil {
 		panic(err)
 	}
-	return utils.Map(res.TxResults, func(r *types.ExecTxResult) uint32 { return r.Code })
+
+	return res.TxResults
 }
 
 func (a *App) GetVotes() []types.VoteInfo {
@@ -139,6 +158,12 @@ func (a *App) GenerateSignableKey(_ string) (addr sdk.AccAddress) {
 	addr = sdk.AccAddress(privKey.PubKey().Address())
 	a.accToMnemonic[addr.String()] = mnemonic
 	return
+}
+
+func (a *App) GetEthereumAddress(addr sdk.AccAddress) sdk.AccAddress {
+	privKey := a.GetKey(addr)
+	_, evmAddr := keeper.PrivateKeyToAddresses(privKey)
+	return evmAddr[:]
 }
 
 func GenerateRandomPubKey() cryptotypes.PubKey {

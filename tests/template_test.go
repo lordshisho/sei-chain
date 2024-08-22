@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/stretchr/testify/require"
+
 	"github.com/sei-protocol/sei-chain/testutil/processblock"
 	"github.com/sei-protocol/sei-chain/testutil/processblock/msgs"
 	"github.com/sei-protocol/sei-chain/testutil/processblock/verify"
-	"github.com/stretchr/testify/require"
 )
 
 type TestCase struct {
@@ -18,7 +19,14 @@ type TestCase struct {
 }
 
 func (c *TestCase) run(t *testing.T, app *processblock.App) {
-	blockRunner := func() []uint32 { return app.RunBlock(c.input) }
+	blockRunner := func() []uint32 {
+		results := app.RunBlock(c.input)
+		codes := make([]uint32, 0, len(results))
+		for _, r := range results {
+			codes = append(codes, r.Code)
+		}
+		return codes
+	}
 	for _, v := range c.verifier {
 		blockRunner = v(t, app, blockRunner, c.input)
 	}
