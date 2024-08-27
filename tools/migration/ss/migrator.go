@@ -116,7 +116,7 @@ func ExportLeafNodes(db dbm.DB, ch chan<- types.RawSnapshotNode) error {
 	// Module by module, TODO: Potentially parallelize
 	count := 0
 	leafNodeCount := 0
-	fmt.Println("Scanning database and exporting leaf nodes...")
+	fmt.Println("ExportLeafNodes - Scanning database and exporting leaf nodes...")
 
 	// Start measuring the total time for the function
 	startTimeTotal := time.Now()
@@ -124,13 +124,13 @@ func ExportLeafNodes(db dbm.DB, ch chan<- types.RawSnapshotNode) error {
 	for _, module := range modules {
 		// Start measuring time for each module
 		startTimeModule := time.Now()
-		fmt.Printf("Iterating through %s module...\n", module)
+		fmt.Printf("ExportLeafNodes - Iterating through %s module...\n", module)
 
 		// Can't use the previous, have to create an inner
 		prefixDB := dbm.NewPrefixDB(db, []byte(buildRawPrefix(module)))
 		itr, err := prefixDB.Iterator(nil, nil)
 		if err != nil {
-			fmt.Printf("Error in Export Leaf Nodes: %+v\n", err)
+			fmt.Printf("ExportLeafNodes - Error in Export Leaf Nodes: %+v\n", err)
 			return fmt.Errorf("failed to create iterator: %w", err)
 		}
 		defer itr.Close()
@@ -143,7 +143,7 @@ func ExportLeafNodes(db dbm.DB, ch chan<- types.RawSnapshotNode) error {
 
 			node, err := iavl.MakeNode(value)
 			if err != nil {
-				fmt.Printf("Failed to make node: %+v\n", err)
+				fmt.Printf("ExportLeafNodes - Failed to make node: %+v\n", err)
 				return fmt.Errorf("failed to make node: %w", err)
 			}
 
@@ -162,7 +162,7 @@ func ExportLeafNodes(db dbm.DB, ch chan<- types.RawSnapshotNode) error {
 			if count%10000 == 0 {
 				// Calculate the time taken for the last 10,000 iterations
 				batchDuration := time.Since(startTimeBatch)
-				fmt.Printf("Last 10,000 iterations took: %v. Total scanned: %d, leaf nodes exported: %d\n", batchDuration, count, leafNodeCount)
+				fmt.Printf("ExportLeafNodes - Last 10,000 iterations took: %v. Total scanned: %d, leaf nodes exported: %d\n", batchDuration, count, leafNodeCount)
 
 				// Reset the start time for the next batch
 				startTimeBatch = time.Now()
@@ -176,12 +176,12 @@ func ExportLeafNodes(db dbm.DB, ch chan<- types.RawSnapshotNode) error {
 
 		// Log the time taken to process the current module
 		moduleDuration := time.Since(startTimeModule)
-		fmt.Printf("Finished scanning module %s. Time taken: %v. Total scanned: %d, leaf nodes exported: %d\n", module, moduleDuration, count, leafNodeCount)
+		fmt.Printf("ExportLeafNodes - Finished scanning module %s. Time taken: %v. Total scanned: %d, leaf nodes exported: %d\n", module, moduleDuration, count, leafNodeCount)
 	}
 
 	// Log the total time taken for the entire function
 	totalDuration := time.Since(startTimeTotal)
-	fmt.Printf("DB scanning completed. Total time taken: %v. Total entries scanned: %d, leaf nodes exported: %d\n", totalDuration, count, leafNodeCount)
+	fmt.Printf("ExportLeafNodes - DB scanning completed. Total time taken: %v. Total entries scanned: %d, leaf nodes exported: %d\n", totalDuration, count, leafNodeCount)
 
 	return nil
 }
