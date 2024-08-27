@@ -3,6 +3,7 @@ package ss
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/cosmos/iavl"
 	"github.com/sei-protocol/sei-db/config"
@@ -117,33 +118,39 @@ func ExportLeafNodes(db dbm.DB, ch chan<- types.RawSnapshotNode) error {
 	leafNodeCount := 0
 	fmt.Println("Scanning database and exporting leaf nodes...")
 
+	// Start measuring the total time for the function
+	startTimeTotal := time.Now()
+
 	for _, module := range modules {
+		// Start measuring time for each module
+		startTimeModule := time.Now()
 		fmt.Printf("Iterating through %s module...\n", module)
 
 		// Can't use the previous, have to create an inner
 		prefixDB := dbm.NewPrefixDB(db, []byte(buildRawPrefix(module)))
 		itr, err := prefixDB.Iterator(nil, nil)
 		if err != nil {
-			fmt.Printf("error Export Leaf Nodes %+v\n", err)
+			fmt.Printf("Error in Export Leaf Nodes: %+v\n", err)
 			return fmt.Errorf("failed to create iterator: %w", err)
 		}
 		defer itr.Close()
+
+		// Track time for every 10,000 iterations
+		startTimeBatch := time.Now()
 
 		for ; itr.Valid(); itr.Next() {
 			value := bytes.Clone(itr.Value())
 
 			node, err := iavl.MakeNode(value)
-
 			if err != nil {
-				fmt.Printf("failed to make node err: %+v\n", err)
+				fmt.Printf("Failed to make node: %+v\n", err)
 				return fmt.Errorf("failed to make node: %w", err)
 			}
 
-			// leaf node
+			// Leaf node
 			if node.GetHeight() == 0 {
 				leafNodeCount++
 				ch <- types.RawSnapshotNode{
-					// TODO: Likely need to clone
 					StoreKey: module,
 					Key:      node.GetNodeKey(),
 					Value:    node.GetValue(),
@@ -153,20 +160,29 @@ func ExportLeafNodes(db dbm.DB, ch chan<- types.RawSnapshotNode) error {
 
 			count++
 			if count%10000 == 0 {
-				fmt.Printf("Total scanned: %d, leaf nodes exported: %d\n", count, leafNodeCount)
+				// Calculate the time taken for the last 10,000 iterations
+				batchDuration := time.Since(startTimeBatch)
+				fmt.Printf("Last 10,000 iterations took: %v. Total scanned: %d, leaf nodes exported: %d\n", batchDuration, count, leafNodeCount)
+
+				// Reset the start time for the next batch
+				startTimeBatch = time.Now()
 			}
 		}
 
-		fmt.Printf("Finished scanning module %s Total scanned: %d, leaf nodes exported: %d\n", module, count, leafNodeCount)
-
 		if err := itr.Error(); err != nil {
-			fmt.Printf("iterator error: %+v\n", err)
+			fmt.Printf("Iterator error: %+v\n", err)
 			return fmt.Errorf("iterator error: %w", err)
 		}
 
+		// Log the time taken to process the current module
+		moduleDuration := time.Since(startTimeModule)
+		fmt.Printf("Finished scanning module %s. Time taken: %v. Total scanned: %d, leaf nodes exported: %d\n", module, moduleDuration, count, leafNodeCount)
 	}
 
-	fmt.Printf("DB contains %d entries, exported %d leaf nodes\n", count, leafNodeCount)
+	// Log the total time taken for the entire function
+	totalDuration := time.Since(startTimeTotal)
+	fmt.Printf("DB scanning completed. Total time taken: %v. Total entries scanned: %d, leaf nodes exported: %d\n", totalDuration, count, leafNodeCount)
+
 	return nil
 }
 
