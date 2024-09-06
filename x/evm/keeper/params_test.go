@@ -12,8 +12,8 @@ import (
 
 func TestParams(t *testing.T) {
 	// k := &testkeeper.EVMTestApp().EvmKeeper
-	k, _, testApp := testkeeper.MockEVMKeeper()
-	ctx := testApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k, _ := testkeeper.MockEVMKeeperWithPrecompiles()
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	// ctx, _ = ctx.CacheContext()
 	require.Equal(t, "usei", k.GetBaseDenom(ctx))
 	require.Equal(t, types.DefaultPriorityNormalizer, k.GetPriorityNormalizer(ctx))
@@ -26,7 +26,7 @@ func TestParams(t *testing.T) {
 }
 
 func TestGetParamsIfExists(t *testing.T) {
-	k := &testkeeper.EVMTestApp().EvmKeeper
+	k, _ := testkeeper.MockEVMKeeperWithPrecompiles()
 	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 
 	// Define the expected parameters
