@@ -27,7 +27,7 @@ func TestSimple(t *testing.T) {
 	require.Nil(t, err)
 	contractData := append(bytecode, args...)
 
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	k := &testApp.EvmKeeper
 	privKey := testkeeper.MockPrivateKey()

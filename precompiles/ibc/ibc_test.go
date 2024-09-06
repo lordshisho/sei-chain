@@ -261,7 +261,7 @@ func TestPrecompile_Run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testApp := testkeeper.EVMTestApp
+			testApp := testkeeper.EVMTestApp()
 			ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 			k := &testApp.EvmKeeper
 			k.SetAddressMapping(ctx, senderSeiAddress, senderEvmAddress)
@@ -438,7 +438,7 @@ func TestTransferWithDefaultTimeoutPrecompile_Run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testApp := testkeeper.EVMTestApp
+			testApp := testkeeper.EVMTestApp()
 			ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 			k := &testApp.EvmKeeper
 			k.SetAddressMapping(ctx, senderSeiAddress, senderEvmAddress)

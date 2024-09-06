@@ -27,7 +27,7 @@ import (
 )
 
 func TestPurgePrefixNotHang(t *testing.T) {
-	k, ctx := keeper.MockEVMKeeper()
+	k, ctx, _ := keeper.MockEVMKeeper()
 	_, evmAddr := keeper.MockAddressPair()
 	for i := 0; i < 50; i++ {
 		ctx = ctx.WithMultiStore(ctx.MultiStore().CacheMultiStore())
@@ -38,7 +38,7 @@ func TestPurgePrefixNotHang(t *testing.T) {
 }
 
 func TestGetChainID(t *testing.T) {
-	k, ctx := keeper.MockEVMKeeper()
+	k, ctx, _ := keeper.MockEVMKeeper()
 	require.Equal(t, config.DefaultChainID, k.ChainID(ctx).Int64())
 
 	ctx = ctx.WithChainID("pacific-1")
@@ -52,7 +52,7 @@ func TestGetChainID(t *testing.T) {
 }
 
 func TestGetVMBlockContext(t *testing.T) {
-	k, ctx := keeper.MockEVMKeeper()
+	k, ctx, _ := keeper.MockEVMKeeper()
 	moduleAddr := k.AccountKeeper().GetModuleAddress(authtypes.FeeCollectorName)
 	evmAddr, _ := k.GetEVMAddress(ctx, moduleAddr)
 	k.DeleteAddressMapping(ctx, moduleAddr, evmAddr)
@@ -61,7 +61,7 @@ func TestGetVMBlockContext(t *testing.T) {
 }
 
 func TestGetHashFn(t *testing.T) {
-	k, ctx := keeper.MockEVMKeeper()
+	k, ctx, _ := keeper.MockEVMKeeper()
 	f := k.GetHashFn(ctx)
 	require.Equal(t, common.Hash{}, f(math.MaxInt64+1))
 	require.Equal(t, common.BytesToHash(ctx.HeaderHash()), f(uint64(ctx.BlockHeight())))
@@ -194,7 +194,7 @@ func TestKeeper_CalculateNextNonce(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			k, ctx := keeper.MockEVMKeeper()
+			k, ctx, _ := keeper.MockEVMKeeper()
 			if test.setup != nil {
 				test.setup(ctx, k)
 			}
@@ -240,7 +240,7 @@ func TestDeferredInfo(t *testing.T) {
 }
 
 func TestAddPendingNonce(t *testing.T) {
-	k, _ := keeper.MockEVMKeeper()
+	k, _, _ := keeper.MockEVMKeeper()
 	k.AddPendingNonce(tmtypes.TxKey{1}, common.HexToAddress("123"), 1, 1)
 	k.AddPendingNonce(tmtypes.TxKey{2}, common.HexToAddress("123"), 2, 1)
 	k.AddPendingNonce(tmtypes.TxKey{3}, common.HexToAddress("123"), 2, 2) // should replace the one above
@@ -261,7 +261,7 @@ func TestAddPendingNonce(t *testing.T) {
 }
 
 func mockEVMTransactionMessage(t *testing.T) *types.MsgEVMTransaction {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	chainID := k.ChainID(ctx)
 	chainCfg := types.DefaultChainConfig()
 	ethCfg := chainCfg.EthereumConfig(chainID)

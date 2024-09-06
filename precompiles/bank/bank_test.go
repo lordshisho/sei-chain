@@ -44,7 +44,7 @@ func (tx mockTx) GetPubKeys() ([]cryptotypes.PubKey, error)       { return nil, 
 func (tx mockTx) GetSignaturesV2() ([]signing.SignatureV2, error) { return nil, nil }
 
 func TestRun(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	k := &testApp.EvmKeeper
 
@@ -250,7 +250,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestSendForUnlinkedReceiver(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	k := &testApp.EvmKeeper
 

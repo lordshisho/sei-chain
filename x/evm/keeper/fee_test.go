@@ -18,7 +18,7 @@ func TestBaseFeePerGas(t *testing.T) {
 }
 
 func TestAdjustBaseFeePerGas(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	testCases := []struct {
 		name            string
 		currentBaseFee  float64

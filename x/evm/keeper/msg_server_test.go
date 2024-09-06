@@ -45,7 +45,7 @@ func (tx mockTx) GetPubKeys() ([]cryptotypes.PubKey, error)       { return nil, 
 func (tx mockTx) GetSignaturesV2() ([]signing.SignatureV2, error) { return nil, nil }
 
 func TestEVMTransaction(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	code, err := os.ReadFile("../../../example/contracts/simplestorage/SimpleStorage.bin")
 	require.Nil(t, err)
 	bz, err := hex.DecodeString(string(code))
@@ -145,7 +145,7 @@ func TestEVMTransaction(t *testing.T) {
 }
 
 func TestEVMTransactionError(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	privKey := testkeeper.MockPrivateKey()
 	testPrivHex := hex.EncodeToString(privKey.Bytes())
 	key, _ := crypto.HexToECDSA(testPrivHex)
@@ -196,7 +196,7 @@ func TestEVMTransactionError(t *testing.T) {
 }
 
 func TestEVMTransactionInsufficientGas(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	code, err := os.ReadFile("../../../example/contracts/simplestorage/SimpleStorage.bin")
 	require.Nil(t, err)
 	bz, err := hex.DecodeString(string(code))
@@ -244,7 +244,7 @@ func TestEVMTransactionInsufficientGas(t *testing.T) {
 }
 
 func TestEVMDynamicFeeTransaction(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	code, err := os.ReadFile("../../../example/contracts/simplestorage/SimpleStorage.bin")
 	require.Nil(t, err)
 	bz, err := hex.DecodeString(string(code))
@@ -407,7 +407,7 @@ func TestEVMPrecompiles(t *testing.T) {
 }
 
 func TestEVMAssociateTx(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	req, err := types.NewMsgEVMTransaction(&ethtx.AssociateTx{})
 	require.Nil(t, err)
 	msgServer := keeper.NewMsgServerImpl(k)
@@ -419,7 +419,7 @@ func TestEVMAssociateTx(t *testing.T) {
 }
 
 func TestEVMBlockEnv(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	code, err := os.ReadFile("../../../example/contracts/echo/Echo.bin")
 	require.Nil(t, err)
 	bz, err := hex.DecodeString(string(code))
@@ -511,7 +511,7 @@ func TestEVMBlockEnv(t *testing.T) {
 }
 
 func TestSend(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	seiFrom, evmFrom := testkeeper.MockAddressPair()
 	seiTo, evmTo := testkeeper.MockAddressPair()
 	k.SetAddressMapping(ctx, seiFrom, evmFrom)
@@ -528,7 +528,7 @@ func TestSend(t *testing.T) {
 }
 
 func TestRegisterPointer(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	sender, _ := testkeeper.MockAddressPair()
 	_, pointee := testkeeper.MockAddressPair()
 	res, err := keeper.NewMsgServerImpl(k).RegisterPointer(sdk.WrapSDKContext(ctx), &types.MsgRegisterPointer{
@@ -707,7 +707,7 @@ func TestEvmError(t *testing.T) {
 }
 
 func TestAssociateContractAddress(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _ := testkeeper.MockEVMKeeper()
 	msgServer := keeper.NewMsgServerImpl(k)
 	dummySeiAddr, dummyEvmAddr := testkeeper.MockAddressPair()
 	res, err := msgServer.RegisterPointer(sdk.WrapSDKContext(ctx), &types.MsgRegisterPointer{

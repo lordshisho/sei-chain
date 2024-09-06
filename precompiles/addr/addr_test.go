@@ -18,7 +18,7 @@ import (
 )
 
 func TestAssociatePubKey(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	k := &testApp.EvmKeeper
 
@@ -160,7 +160,7 @@ func TestAssociatePubKey(t *testing.T) {
 }
 
 func TestAssociate(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	k := &testApp.EvmKeeper
 

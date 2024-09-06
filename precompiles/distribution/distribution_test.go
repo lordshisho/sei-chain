@@ -43,7 +43,7 @@ import (
 var f embed.FS
 
 func TestWithdraw(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	distrParams := testApp.DistrKeeper.GetParams(ctx)
 	distrParams.WithdrawAddrEnabled = true
@@ -156,7 +156,7 @@ func TestWithdraw(t *testing.T) {
 }
 
 func TestWithdrawMultipleDelegationRewards(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	distrParams := testApp.DistrKeeper.GetParams(ctx)
 	distrParams.WithdrawAddrEnabled = true
@@ -476,7 +476,7 @@ func TestPrecompile_RunAndCalculateGas_WithdrawDelegationRewards(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testApp := testkeeper.EVMTestApp
+			testApp := testkeeper.EVMTestApp()
 			ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 			k := &testApp.EvmKeeper
 			stateDb := state.NewDBImpl(ctx, k, true)
@@ -630,7 +630,7 @@ func TestPrecompile_RunAndCalculateGas_WithdrawMultipleDelegationRewards(t *test
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testApp := testkeeper.EVMTestApp
+			testApp := testkeeper.EVMTestApp()
 			ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 			k := &testApp.EvmKeeper
 			stateDb := state.NewDBImpl(ctx, k, true)
@@ -798,7 +798,7 @@ func TestPrecompile_RunAndCalculateGas_SetWithdrawAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testApp := testkeeper.EVMTestApp
+			testApp := testkeeper.EVMTestApp()
 			ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 			k := &testApp.EvmKeeper
 			k.SetAddressMapping(ctx, callerSeiAddress, callerEvmAddress)
@@ -1073,7 +1073,7 @@ func TestPrecompile_RunAndCalculateGas_Rewards(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testApp := testkeeper.EVMTestApp
+			testApp := testkeeper.EVMTestApp():w http.ResponseWriter, r *http.Request
 			ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 			k := &testApp.EvmKeeper
 			k.SetAddressMapping(ctx, callerSeiAddress, callerEvmAddress)

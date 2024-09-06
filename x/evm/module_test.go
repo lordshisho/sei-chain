@@ -30,26 +30,26 @@ import (
 )
 
 func TestModuleName(t *testing.T) {
-	k, _ := testkeeper.MockEVMKeeper()
+	k, _, _ := testkeeper.MockEVMKeeper()
 	module := evm.NewAppModule(nil, k)
 	assert.Equal(t, "evm", module.Name())
 }
 
 func TestModuleRoute(t *testing.T) {
-	k, _ := testkeeper.MockEVMKeeper()
+	k, _, _ := testkeeper.MockEVMKeeper()
 	module := evm.NewAppModule(nil, k)
 	assert.Equal(t, "evm", module.Route().Path())
 	assert.Equal(t, false, module.Route().Empty())
 }
 
 func TestQuerierRoute(t *testing.T) {
-	k, _ := testkeeper.MockEVMKeeper()
+	k, _, _ := testkeeper.MockEVMKeeper()
 	module := evm.NewAppModule(nil, k)
 	assert.Equal(t, "evm", module.QuerierRoute())
 }
 
 func TestModuleExportGenesis(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _:= testkeeper.MockEVMKeeper()
 	module := evm.NewAppModule(nil, k)
 	jsonMsg := module.ExportGenesis(ctx, types.ModuleCdc)
 	jsonStr := string(jsonMsg)
@@ -57,13 +57,13 @@ func TestModuleExportGenesis(t *testing.T) {
 }
 
 func TestConsensusVersion(t *testing.T) {
-	k, _ := testkeeper.MockEVMKeeper()
+	k, _, _:= testkeeper.MockEVMKeeper()
 	module := evm.NewAppModule(nil, k)
 	assert.Equal(t, uint64(12), module.ConsensusVersion())
 }
 
 func TestABCI(t *testing.T) {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _:= testkeeper.MockEVMKeeper()
 	_, evmAddr1 := testkeeper.MockAddressPair()
 	_, evmAddr2 := testkeeper.MockAddressPair()
 	amt := sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(10)))
@@ -172,7 +172,7 @@ func TestAnteSurplus(t *testing.T) {
 
 // This test is just to make sure that the routes can be added without crashing
 func TestRoutesAddition(t *testing.T) {
-	k, _ := testkeeper.MockEVMKeeper()
+	k, _, _:= testkeeper.MockEVMKeeper()
 	appModule := evm.NewAppModule(nil, k)
 	mux := runtime.NewServeMux()
 	appModule.RegisterGRPCGatewayRoutes(client.Context{}, mux)
@@ -181,7 +181,7 @@ func TestRoutesAddition(t *testing.T) {
 }
 
 func mockEVMTransactionMessage(t *testing.T) *types.MsgEVMTransaction {
-	k, ctx := testkeeper.MockEVMKeeper()
+	k, ctx, _:= testkeeper.MockEVMKeeper()
 	chainID := k.ChainID(ctx)
 	chainCfg := types.DefaultChainConfig()
 	ethCfg := chainCfg.EthereumConfig(chainID)

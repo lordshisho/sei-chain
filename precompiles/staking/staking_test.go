@@ -38,7 +38,7 @@ import (
 var f embed.FS
 
 func TestStaking(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	k := &testApp.EvmKeeper
 	valPub1 := secp256k1.GenPrivKey().PubKey()
@@ -148,7 +148,7 @@ func TestStaking(t *testing.T) {
 }
 
 func TestStakingError(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	k := &testApp.EvmKeeper
 	valPub1 := secp256k1.GenPrivKey().PubKey()
@@ -442,7 +442,7 @@ func TestPrecompile_Run_Delegation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testApp := testkeeper.EVMTestApp
+			testApp := testkeeper.EVMTestApp()
 			ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 			k := &testApp.EvmKeeper
 			k.SetAddressMapping(ctx, callerSeiAddress, callerEvmAddress)

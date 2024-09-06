@@ -17,7 +17,7 @@ import (
 )
 
 func TestGetExchangeRate(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	rate := sdk.NewDec(1700)
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	testApp.OracleKeeper.SetBaseExchangeRate(ctx, utils.MicroAtomDenom, rate)
@@ -69,7 +69,7 @@ func TestGetExchangeRate(t *testing.T) {
 }
 
 func TestGetOracleTwaps(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockTime(time.Unix(5400, 0))
 
 	priceSnapshots := types.PriceSnapshots{

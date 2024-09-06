@@ -27,7 +27,7 @@ import (
 var f embed.FS
 
 func TestGovPrecompile(t *testing.T) {
-	testApp := testkeeper.EVMTestApp
+	testApp := testkeeper.EVMTestApp()
 	ctx := testApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	content := govtypes.ContentFromProposalType("title", "description", govtypes.ProposalTypeText, false)
 	proposal, err := testApp.GovKeeper.SubmitProposal(ctx, content)
