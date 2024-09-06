@@ -16,8 +16,8 @@ import (
 )
 
 func TestMigrateERCNativePointers(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	var pointerAddr common.Address
 	require.Nil(t, k.RunWithOneOffEVMInstance(ctx, func(e *vm.EVM) error {
 		a, err := k.UpsertERCNativePointer(ctx, e, "test", utils.ERCMetadata{Name: "name", Symbol: "symbol", Decimals: 6})
@@ -31,8 +31,8 @@ func TestMigrateERCNativePointers(t *testing.T) {
 }
 
 func TestMigrateERCCW20Pointers(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	var pointerAddr common.Address
 	require.Nil(t, k.RunWithOneOffEVMInstance(ctx, func(e *vm.EVM) error {
 		a, err := k.UpsertERCCW20Pointer(ctx, e, "test", utils.ERCMetadata{Name: "name", Symbol: "symbol"})
@@ -46,8 +46,8 @@ func TestMigrateERCCW20Pointers(t *testing.T) {
 }
 
 func TestMigrateERCCW721Pointers(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	var pointerAddr common.Address
 	require.Nil(t, k.RunWithOneOffEVMInstance(ctx, func(e *vm.EVM) error {
 		a, err := k.UpsertERCCW721Pointer(ctx, e, "test", utils.ERCMetadata{Name: "name", Symbol: "symbol"})
@@ -61,8 +61,8 @@ func TestMigrateERCCW721Pointers(t *testing.T) {
 }
 
 func TestMigrateCWERC20Pointers(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	require.Nil(t, migrations.StoreCWPointerCode(ctx, &k, true, false))
 	msgServer := keeper.NewMsgServerImpl(&k)
 	res, err := msgServer.RegisterPointer(sdk.WrapSDKContext(ctx), &types.MsgRegisterPointer{
@@ -77,8 +77,8 @@ func TestMigrateCWERC20Pointers(t *testing.T) {
 }
 
 func TestMigrateCWERC721Pointers(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	require.Nil(t, migrations.StoreCWPointerCode(ctx, &k, false, true))
 	msgServer := keeper.NewMsgServerImpl(&k)
 	res, err := msgServer.RegisterPointer(sdk.WrapSDKContext(ctx), &types.MsgRegisterPointer{

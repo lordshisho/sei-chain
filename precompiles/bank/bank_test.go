@@ -340,8 +340,8 @@ func TestSendForUnlinkedReceiver(t *testing.T) {
 }
 
 func TestMetadata(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	k.BankKeeper().SetDenomMetaData(ctx, banktypes.Metadata{Name: "SEI", Symbol: "usei", Base: "usei"})
 	p, err := bank.NewPrecompile(k.BankKeeper(), k, k.AccountKeeper())
 	require.Nil(t, err)
@@ -381,7 +381,7 @@ func TestMetadata(t *testing.T) {
 }
 
 func TestRequiredGas(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
+	k := &testkeeper.EVMTestApp().EvmKeeper
 	p, err := bank.NewPrecompile(k.BankKeeper(), k, k.AccountKeeper())
 	require.Nil(t, err)
 	balanceRequiredGas := p.RequiredGas(p.GetExecutor().(*bank.PrecompileExecutor).BalanceID)
@@ -391,7 +391,7 @@ func TestRequiredGas(t *testing.T) {
 }
 
 func TestAddress(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
+	k := &testkeeper.EVMTestApp().EvmKeeper
 	p, err := bank.NewPrecompile(k.BankKeeper(), k, k.AccountKeeper())
 	require.Nil(t, err)
 	require.Equal(t, common.HexToAddress(bank.BankAddress), p.Address())

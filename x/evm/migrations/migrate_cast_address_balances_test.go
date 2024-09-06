@@ -12,8 +12,8 @@ import (
 )
 
 func TestMigrateCastAddressBalances(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	require.Nil(t, k.BankKeeper().MintCoins(ctx, types.ModuleName, testkeeper.UseiCoins(100)))
 	// unassociated account with funds
 	seiAddr1, evmAddr1 := testkeeper.MockAddressPair()

@@ -11,8 +11,8 @@ import (
 )
 
 func TestMigrateDeliverTxHookWasmGasLimitParam(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.NewContext(false, tmtypes.Header{})
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().NewContext(false, tmtypes.Header{})
 
 	currParams := k.GetParams(ctx)
 

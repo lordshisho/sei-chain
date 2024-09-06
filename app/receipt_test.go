@@ -34,9 +34,9 @@ import (
 var f embed.FS
 
 func TestEvmEventsForCw20(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
+	k := testkeeper.EVMTestApp().EvmKeeper
 	wasmKeeper := k.WasmKeeper()
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now()).WithChainID("sei-test").WithBlockHeight(1)
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now()).WithChainID("sei-test").WithBlockHeight(1)
 	code, err := os.ReadFile("../contracts/wasm/cw20_base.wasm")
 	require.Nil(t, err)
 	privKey := testkeeper.MockPrivateKey()
@@ -60,22 +60,22 @@ func TestEvmEventsForCw20(t *testing.T) {
 		Contract: contractAddr.String(),
 		Msg:      payload,
 	}
-	txBuilder := testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder := testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(msg)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(1000000))))
 	txBuilder.SetGasLimit(300000)
 	tx := signTx(txBuilder, privKey, k.AccountKeeper().GetAccount(ctx, creator))
-	txbz, err := testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err := testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum := sha256.Sum256(txbz)
-	res := testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res := testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err := testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
+	receipt, err := testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
 	require.Equal(t, mockPointerAddr.Hex(), receipt.Logs[0].Address)
-	_, found := testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found := testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 
 	// calling from wasmd precompile
@@ -105,20 +105,20 @@ func TestEvmEventsForCw20(t *testing.T) {
 	require.Nil(t, err)
 	emsg, err := evmtypes.NewMsgEVMTransaction(typedTx)
 	require.Nil(t, err)
-	txBuilder = testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder = testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(emsg)
 	tx = txBuilder.GetTx()
-	txbz, err = testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err = testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum = sha256.Sum256(txbz)
-	res = testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()).WithTxIndex(1), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res = testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()).WithTxIndex(1), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err = testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, signedTx.Hash())
+	receipt, err = testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, signedTx.Hash())
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
 	require.Equal(t, mockPointerAddr.Hex(), receipt.Logs[0].Address)
-	_, found = testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found = testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 
 	// test approval message
@@ -128,30 +128,30 @@ func TestEvmEventsForCw20(t *testing.T) {
 		Contract: contractAddr.String(),
 		Msg:      payload,
 	}
-	txBuilder = testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder = testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(msg)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(1000000))))
 	txBuilder.SetGasLimit(300000)
 	tx = signTx(txBuilder, privKey, k.AccountKeeper().GetAccount(ctx, creator))
-	txbz, err = testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err = testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum = sha256.Sum256(txbz)
-	res = testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res = testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err = testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
+	receipt, err = testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
 	require.Equal(t, mockPointerAddr.Hex(), receipt.Logs[0].Address)
-	_, found = testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found = testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 	require.Equal(t, common.HexToHash("0x64").Bytes(), receipt.Logs[0].Data)
 }
 
 func TestEvmEventsForCw721(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
+	k := testkeeper.EVMTestApp().EvmKeeper
 	wasmKeeper := k.WasmKeeper()
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now()).WithChainID("sei-test").WithBlockHeight(1)
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now()).WithChainID("sei-test").WithBlockHeight(1)
 	code, err := os.ReadFile("../contracts/wasm/cw721_base.wasm")
 	require.Nil(t, err)
 	privKey := testkeeper.MockPrivateKey()
@@ -175,22 +175,22 @@ func TestEvmEventsForCw721(t *testing.T) {
 		Contract: contractAddr.String(),
 		Msg:      payload,
 	}
-	txBuilder := testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder := testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(msg)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(1000000))))
 	txBuilder.SetGasLimit(300000)
 	tx := signTx(txBuilder, privKey, k.AccountKeeper().GetAccount(ctx, creator))
-	txbz, err := testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err := testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum := sha256.Sum256(txbz)
-	res := testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res := testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err := testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
+	receipt, err := testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
 	require.Equal(t, mockPointerAddr.Hex(), receipt.Logs[0].Address)
-	_, found := testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found := testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 
 	// calling from wasmd precompile
@@ -221,20 +221,20 @@ func TestEvmEventsForCw721(t *testing.T) {
 	require.Nil(t, err)
 	emsg, err := evmtypes.NewMsgEVMTransaction(typedTx)
 	require.Nil(t, err)
-	txBuilder = testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder = testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(emsg)
 	tx = txBuilder.GetTx()
-	txbz, err = testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err = testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum = sha256.Sum256(txbz)
-	res = testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()).WithTxIndex(1), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res = testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()).WithTxIndex(1), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err = testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, signedTx.Hash())
+	receipt, err = testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, signedTx.Hash())
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
 	require.Equal(t, mockPointerAddr.Hex(), receipt.Logs[0].Address)
-	_, found = testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found = testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 
 	// test approval message
@@ -244,17 +244,17 @@ func TestEvmEventsForCw721(t *testing.T) {
 		Contract: contractAddr.String(),
 		Msg:      payload,
 	}
-	txBuilder = testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder = testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(msg)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(1000000))))
 	txBuilder.SetGasLimit(300000)
 	tx = signTx(txBuilder, privKey, k.AccountKeeper().GetAccount(ctx, creator))
-	txbz, err = testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err = testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum = sha256.Sum256(txbz)
-	res = testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res = testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err = testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
+	receipt, err = testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
@@ -262,7 +262,7 @@ func TestEvmEventsForCw721(t *testing.T) {
 	require.Equal(t, uint32(0), receipt.Logs[0].Index)
 	tokenIdHash := receipt.Logs[0].Topics[3]
 	require.Equal(t, "0x0000000000000000000000000000000000000000000000000000000000000002", tokenIdHash)
-	_, found = testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found = testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 	require.Equal(t, common.HexToHash("0x0").Bytes(), receipt.Logs[0].Data)
 
@@ -273,22 +273,22 @@ func TestEvmEventsForCw721(t *testing.T) {
 		Contract: contractAddr.String(),
 		Msg:      payload,
 	}
-	txBuilder = testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder = testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(msg)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(1000000))))
 	txBuilder.SetGasLimit(300000)
 	tx = signTx(txBuilder, privKey, k.AccountKeeper().GetAccount(ctx, creator))
-	txbz, err = testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err = testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum = sha256.Sum256(txbz)
-	res = testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res = testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err = testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
+	receipt, err = testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
 	require.Equal(t, mockPointerAddr.Hex(), receipt.Logs[0].Address)
-	_, found = testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found = testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 	tokenIdHash = receipt.Logs[0].Topics[3]
 	require.Equal(t, "0x0000000000000000000000000000000000000000000000000000000000000002", tokenIdHash)
@@ -301,22 +301,22 @@ func TestEvmEventsForCw721(t *testing.T) {
 		Contract: contractAddr.String(),
 		Msg:      payload,
 	}
-	txBuilder = testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder = testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(msg)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(1000000))))
 	txBuilder.SetGasLimit(300000)
 	tx = signTx(txBuilder, privKey, k.AccountKeeper().GetAccount(ctx, creator))
-	txbz, err = testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err = testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum = sha256.Sum256(txbz)
-	res = testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res = testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err = testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
+	receipt, err = testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
 	require.Equal(t, mockPointerAddr.Hex(), receipt.Logs[0].Address)
-	_, found = testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found = testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 	require.Equal(t, common.HexToHash("0x1").Bytes(), receipt.Logs[0].Data)
 
@@ -327,22 +327,22 @@ func TestEvmEventsForCw721(t *testing.T) {
 		Contract: contractAddr.String(),
 		Msg:      payload,
 	}
-	txBuilder = testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder = testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(msg)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(1000000))))
 	txBuilder.SetGasLimit(300000)
 	tx = signTx(txBuilder, privKey, k.AccountKeeper().GetAccount(ctx, creator))
-	txbz, err = testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err = testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum = sha256.Sum256(txbz)
-	res = testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res = testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err = testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
+	receipt, err = testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
 	require.Equal(t, mockPointerAddr.Hex(), receipt.Logs[0].Address)
-	_, found = testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found = testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 	require.Equal(t, common.HexToHash("0x0").Bytes(), receipt.Logs[0].Data)
 
@@ -353,22 +353,22 @@ func TestEvmEventsForCw721(t *testing.T) {
 		Contract: contractAddr.String(),
 		Msg:      payload,
 	}
-	txBuilder = testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	txBuilder = testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	txBuilder.SetMsgs(msg)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(1000000))))
 	txBuilder.SetGasLimit(300000)
 	tx = signTx(txBuilder, privKey, k.AccountKeeper().GetAccount(ctx, creator))
-	txbz, err = testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(tx)
+	txbz, err = testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(tx)
 	require.Nil(t, err)
 	sum = sha256.Sum256(txbz)
-	res = testkeeper.EVMTestApp.DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
+	res = testkeeper.EVMTestApp().DeliverTx(ctx.WithEventManager(sdk.NewEventManager()), abci.RequestDeliverTx{Tx: txbz}, tx, sum)
 	require.Equal(t, uint32(0), res.Code)
-	receipt, err = testkeeper.EVMTestApp.EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
+	receipt, err = testkeeper.EVMTestApp().EvmKeeper.GetTransientReceipt(ctx, common.BytesToHash(sum[:]))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(receipt.Logs))
 	require.NotEmpty(t, receipt.LogsBloom)
 	require.Equal(t, mockPointerAddr.Hex(), receipt.Logs[0].Address)
-	_, found = testkeeper.EVMTestApp.EvmKeeper.GetEVMTxDeferredInfo(ctx)
+	_, found = testkeeper.EVMTestApp().EvmKeeper.GetEVMTxDeferredInfo(ctx)
 	require.True(t, found)
 	tokenIdHash = receipt.Logs[0].Topics[3]
 	require.Equal(t, "0x0000000000000000000000000000000000000000000000000000000000000002", tokenIdHash)
@@ -380,7 +380,7 @@ func signTx(txBuilder client.TxBuilder, privKey cryptotypes.PrivKey, acc authtyp
 	sigV2 := signing.SignatureV2{
 		PubKey: privKey.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  testkeeper.EVMTestApp.GetTxConfig().SignModeHandler().DefaultMode(),
+			SignMode:  testkeeper.EVMTestApp().GetTxConfig().SignModeHandler().DefaultMode(),
 			Signature: nil,
 		},
 		Sequence: acc.GetSequence(),
@@ -394,11 +394,11 @@ func signTx(txBuilder client.TxBuilder, privKey cryptotypes.PrivKey, acc authtyp
 		Sequence:      acc.GetSequence(),
 	}
 	sigV2, _ = clienttx.SignWithPrivKey(
-		testkeeper.EVMTestApp.GetTxConfig().SignModeHandler().DefaultMode(),
+		testkeeper.EVMTestApp().GetTxConfig().SignModeHandler().DefaultMode(),
 		signerData,
 		txBuilder,
 		privKey,
-		testkeeper.EVMTestApp.GetTxConfig(),
+		testkeeper.EVMTestApp().GetTxConfig(),
 		acc.GetSequence(),
 	)
 	sigsV2 = append(sigsV2, sigV2)

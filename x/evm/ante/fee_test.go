@@ -21,8 +21,8 @@ import (
 )
 
 func TestEVMFeeCheckDecorator(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	handler := ante.NewEVMFeeCheckDecorator(k)
 	privKey := testkeeper.MockPrivateKey()
 	testPrivHex := hex.EncodeToString(privKey.Bytes())
@@ -115,8 +115,8 @@ func TestEVMFeeCheckDecorator(t *testing.T) {
 }
 
 func TestCalculatePriorityScenarios(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	decorator := ante.NewEVMFeeCheckDecorator(k)
 
 	_1gwei := big.NewInt(100000000000)

@@ -10,8 +10,8 @@ import (
 )
 
 func TestAddNewParamsAndSetAllToDefaults(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.NewContext(false, tmtypes.Header{})
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().NewContext(false, tmtypes.Header{})
 	migrations.AddNewParamsAndSetAllToDefaults(ctx, &k)
 	require.NotPanics(t, func() { k.GetParams(ctx) })
 }

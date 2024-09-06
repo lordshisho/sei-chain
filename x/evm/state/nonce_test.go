@@ -11,8 +11,8 @@ import (
 )
 
 func TestNonce(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	stateDB := state.NewDBImpl(ctx, k, false)
 	_, addr := testkeeper.MockAddressPair()
 	stateDB.SetNonce(addr, 1)

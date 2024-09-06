@@ -10,8 +10,8 @@ import (
 )
 
 func TestGasRefund(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	statedb := state.NewDBImpl(ctx, k, false)
 
 	require.Equal(t, uint64(0), statedb.GetRefund())

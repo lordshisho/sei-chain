@@ -222,7 +222,7 @@ func (suite *AnteTestSuite) TestValidateDepedencies() {
 }
 
 func TestEvmAnteErrorHandler(t *testing.T) {
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{})
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{})
 	privKey := testkeeper.MockPrivateKey()
 	testPrivHex := hex.EncodeToString(privKey.Bytes())
 	key, _ := crypto.HexToECDSA(testPrivHex)
@@ -234,7 +234,7 @@ func TestEvmAnteErrorHandler(t *testing.T) {
 		Data:     []byte{},
 		Nonce:    1, // will cause ante error
 	}
-	chainID := testkeeper.EVMTestApp.EvmKeeper.ChainID(ctx)
+	chainID := testkeeper.EVMTestApp().EvmKeeper.ChainID(ctx)
 	chainCfg := evmtypes.DefaultChainConfig()
 	ethCfg := chainCfg.EthereumConfig(chainID)
 	blockNum := big.NewInt(ctx.BlockHeight())
@@ -245,22 +245,22 @@ func TestEvmAnteErrorHandler(t *testing.T) {
 	require.Nil(t, err)
 	req, err := types.NewMsgEVMTransaction(txwrapper)
 	require.Nil(t, err)
-	builder := testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	builder := testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	builder.SetMsgs(req)
 	txToSend := builder.GetTx()
-	encodedTx, err := testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(txToSend)
+	encodedTx, err := testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(txToSend)
 	require.Nil(t, err)
 
 	addr, _ := testkeeper.PrivateKeyToAddresses(privKey)
-	testkeeper.EVMTestApp.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(100000000000))), true)
-	res := testkeeper.EVMTestApp.DeliverTx(ctx, abci.RequestDeliverTx{Tx: encodedTx}, txToSend, sha256.Sum256(encodedTx))
+	testkeeper.EVMTestApp().BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(100000000000))), true)
+	res := testkeeper.EVMTestApp().DeliverTx(ctx, abci.RequestDeliverTx{Tx: encodedTx}, txToSend, sha256.Sum256(encodedTx))
 	require.NotEqual(t, 0, res.Code)
-	testkeeper.EVMTestApp.EvmKeeper.SetTxResults([]*abci.ExecTxResult{{
+	testkeeper.EVMTestApp().EvmKeeper.SetTxResults([]*abci.ExecTxResult{{
 		Code: res.Code,
 		Log:  "nonce too high",
 	}})
-	testkeeper.EVMTestApp.EvmKeeper.SetMsgs([]*evmtypes.MsgEVMTransaction{req})
-	deferredInfo := testkeeper.EVMTestApp.EvmKeeper.GetAllEVMTxDeferredInfo(ctx)
+	testkeeper.EVMTestApp().EvmKeeper.SetMsgs([]*evmtypes.MsgEVMTransaction{req})
+	deferredInfo := testkeeper.EVMTestApp().EvmKeeper.GetAllEVMTxDeferredInfo(ctx)
 	require.Equal(t, 1, len(deferredInfo))
 	require.Contains(t, deferredInfo[0].Error, "nonce too high")
 }

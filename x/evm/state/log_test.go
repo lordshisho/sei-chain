@@ -12,8 +12,8 @@ import (
 )
 
 func TestAddLog(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	statedb := state.NewDBImpl(ctx, k, false)
 
 	logs := statedb.GetAllLogs()
@@ -39,8 +39,8 @@ func TestAddLog(t *testing.T) {
 }
 
 func TestLogIndex(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	statedb := state.NewDBImpl(ctx, k, false)
 	statedb.AddLog(&ethtypes.Log{})
 	statedb.Snapshot()

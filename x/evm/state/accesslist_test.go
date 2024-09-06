@@ -13,8 +13,8 @@ import (
 )
 
 func TestAddAddressToAccessList(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	statedb := state.NewDBImpl(ctx, k, false)
 
 	_, addr := testkeeper.MockAddressPair()
@@ -30,8 +30,8 @@ func TestAddAddressToAccessList(t *testing.T) {
 }
 
 func TestAddSlotToAccessList(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	statedb := state.NewDBImpl(ctx, k, false)
 
 	_, addr := testkeeper.MockAddressPair()
@@ -48,8 +48,8 @@ func TestAddSlotToAccessList(t *testing.T) {
 }
 
 func TestAddSlotToAccessListWithNonExistentAddress(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	statedb := state.NewDBImpl(ctx, k, false)
 
 	_, addr := testkeeper.MockAddressPair()
@@ -59,8 +59,8 @@ func TestAddSlotToAccessListWithNonExistentAddress(t *testing.T) {
 }
 
 func TestPrepare(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	statedb := state.NewDBImpl(ctx, k, false)
 
 	_, sender := testkeeper.MockAddressPair()

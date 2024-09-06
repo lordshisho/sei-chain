@@ -14,8 +14,8 @@ import (
 )
 
 func TestPointerView(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	p, err := pointerview.NewPrecompile(k)
 	require.Nil(t, err)
 	_, pointer := testkeeper.MockAddressPair()

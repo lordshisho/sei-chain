@@ -58,8 +58,8 @@ func MockEVMKeeperWithPrecompiles() (*evmkeeper.Keeper, sdk.Context) {
 	return &k, ctx
 }
 
-func MockEVMKeeper() (*evmkeeper.Keeper, sdk.Context) {
-	testApp := app.Setup(false, false)
+func MockEVMKeeper() (*evmkeeper.Keeper, sdk.Context, *app.App) {
+	testApp := app.Setup(false, true)
 	ctx := testApp.GetContextForDeliverTx([]byte{}).WithBlockHeight(8).WithBlockTime(time.Now())
 	k := testApp.EvmKeeper
 	k.InitGenesis(ctx, *evmtypes.DefaultGenesis())
@@ -77,7 +77,7 @@ func MockEVMKeeper() (*evmkeeper.Keeper, sdk.Context) {
 	if err != nil {
 		panic(err)
 	}
-	return &k, ctx
+	return &k, ctx, testApp
 }
 
 func MockAddressPair() (sdk.AccAddress, common.Address) {
