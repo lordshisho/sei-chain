@@ -11,7 +11,7 @@ import (
 )
 
 func TestParams(t *testing.T) {
-	k, _ := testkeeper.MockEVMKeeper()
+	k := &testkeeper.EVMTestApp.EvmKeeper
 	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	require.Equal(t, "usei", k.GetBaseDenom(ctx))
 	require.Equal(t, types.DefaultPriorityNormalizer, k.GetPriorityNormalizer(ctx))
