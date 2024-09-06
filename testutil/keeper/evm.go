@@ -81,7 +81,7 @@ func MockEVMKeeper() (*evmkeeper.Keeper, sdk.Context, *app.App) {
 }
 
 func MockEVMKeeperWithNewAppPrecomps() (*evmkeeper.Keeper, sdk.Context, *app.App) {
-	testApp := app.Setup(false, true)
+	testApp := EVMTestApp()
 	ctx := testApp.GetContextForDeliverTx([]byte{}).WithBlockHeight(8).WithBlockTime(time.Now())
 	k := testApp.EvmKeeper
 	k.InitGenesis(ctx, *evmtypes.DefaultGenesis())
