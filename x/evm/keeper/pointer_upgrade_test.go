@@ -14,8 +14,8 @@ import (
 )
 
 func TestRunWithOneOffEVMInstance(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	errLog := ""
 	errRunner := func(*vm.EVM) error { return errors.New("test") }
 	errLogger := func(a string, b string) { errLog = a + " " + b }
@@ -29,8 +29,8 @@ func TestRunWithOneOffEVMInstance(t *testing.T) {
 }
 
 func TestUpsertERCNativePointer(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeterWithMultiplier(ctx))
 	var addr common.Address
 	err := k.RunWithOneOffEVMInstance(ctx, func(e *vm.EVM) error {
@@ -69,8 +69,8 @@ func TestUpsertERCNativePointer(t *testing.T) {
 }
 
 func TestUpsertERC20Pointer(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeterWithMultiplier(ctx))
 	var addr common.Address
 	err := k.RunWithOneOffEVMInstance(ctx, func(e *vm.EVM) error {
@@ -96,8 +96,8 @@ func TestUpsertERC20Pointer(t *testing.T) {
 }
 
 func TestUpsertERC721Pointer(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeterWithMultiplier(ctx))
 	var addr common.Address
 	err := k.RunWithOneOffEVMInstance(ctx, func(e *vm.EVM) error {

@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func MockEVMKeeper() (*evmkeeper.Keeper, sdk.Context) {
+func MockEVMKeeper() (*evmkeeper.Keeper, sdk.Context, *app.App) {
 	testApp := app.Setup(false, true)
 	ctx := testApp.GetContextForDeliverTx([]byte{}).WithBlockHeight(8).WithBlockTime(time.Now())
 	k := testApp.EvmKeeper
@@ -33,14 +33,14 @@ func MockEVMKeeper() (*evmkeeper.Keeper, sdk.Context) {
 	if err != nil {
 		panic(err)
 	}
-	return &k, ctx
+	return &k, ctx, testApp
 }
 
 func TestParams(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	// k, _ := MockEVMKeeper()
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
-	ctx, _ = ctx.CacheContext()
+	// k := &testkeeper.EVMTestApp().EvmKeeper
+	k, _, testApp := MockEVMKeeper()
+	ctx := testApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	// ctx, _ = ctx.CacheContext()
 	require.Equal(t, "usei", k.GetBaseDenom(ctx))
 	require.Equal(t, types.DefaultPriorityNormalizer, k.GetPriorityNormalizer(ctx))
 	require.Equal(t, types.DefaultMinFeePerGas, k.GetDynamicBaseFeePerGas(ctx))
@@ -52,8 +52,8 @@ func TestParams(t *testing.T) {
 }
 
 func TestGetParamsIfExists(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 
 	// Define the expected parameters
 	expectedParams := types.Params{

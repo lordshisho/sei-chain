@@ -18,8 +18,8 @@ import (
 )
 
 func TestQueryPointer(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	seiAddr1, evmAddr1 := testkeeper.MockAddressPair()
 	seiAddr2, evmAddr2 := testkeeper.MockAddressPair()
 	seiAddr3, evmAddr3 := testkeeper.MockAddressPair()

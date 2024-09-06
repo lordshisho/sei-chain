@@ -17,7 +17,15 @@ import (
 	evmtypes "github.com/sei-protocol/sei-chain/x/evm/types"
 )
 
-var EVMTestApp = app.Setup(false, true)
+var evmTestApp *app.App
+
+func EVMTestApp() *app.App {
+	if evmTestApp == nil {
+		evmTestApp = app.Setup(false, true)
+	}
+	return evmTestApp
+}
+
 var mockKeeper *evmkeeper.Keeper
 var mockCtx sdk.Context
 var mtx = &sync.Mutex{}
@@ -28,8 +36,8 @@ func MockEVMKeeperWithPrecompiles() (*evmkeeper.Keeper, sdk.Context) {
 	if mockKeeper != nil {
 		return mockKeeper, mockCtx
 	}
-	ctx := EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockHeight(8)
-	k := EVMTestApp.EvmKeeper
+	ctx := EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockHeight(8)
+	k := EVMTestApp().EvmKeeper
 	k.InitGenesis(ctx, *evmtypes.DefaultGenesis())
 
 	// mint some coins to a sei address
@@ -37,11 +45,11 @@ func MockEVMKeeperWithPrecompiles() (*evmkeeper.Keeper, sdk.Context) {
 	if err != nil {
 		panic(err)
 	}
-	err = EVMTestApp.BankKeeper.MintCoins(ctx, "evm", sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(10))))
+	err = EVMTestApp().BankKeeper.MintCoins(ctx, "evm", sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(10))))
 	if err != nil {
 		panic(err)
 	}
-	err = EVMTestApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, "evm", seiAddr, sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(10))))
+	err = EVMTestApp().BankKeeper.SendCoinsFromModuleToAccount(ctx, "evm", seiAddr, sdk.NewCoins(sdk.NewCoin("usei", sdk.NewInt(10))))
 	if err != nil {
 		panic(err)
 	}

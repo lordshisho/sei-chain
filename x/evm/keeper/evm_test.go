@@ -24,8 +24,8 @@ func TestInternalCallCreateContract(t *testing.T) {
 	require.Nil(t, err)
 	contractData := append(bytecode, args...)
 
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2).WithTxSum([32]byte{1, 2, 3})
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().NewContext(false, tmtypes.Header{}).WithBlockHeight(2).WithTxSum([32]byte{1, 2, 3})
 	testAddr, _ := testkeeper.MockAddressPair()
 	amt := sdk.NewCoins(sdk.NewCoin(k.GetBaseDenom(ctx), sdk.NewInt(200000000)))
 	require.Nil(t, k.BankKeeper().MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(k.GetBaseDenom(ctx), sdk.NewInt(200000000)))))
@@ -55,8 +55,8 @@ func TestInternalCall(t *testing.T) {
 	require.Nil(t, err)
 	contractData := append(bytecode, args...)
 
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	testAddr, senderEvmAddr := testkeeper.MockAddressPair()
 	k.SetAddressMapping(ctx, testAddr, senderEvmAddr)
 	amt := sdk.NewCoins(sdk.NewCoin(k.GetBaseDenom(ctx), sdk.NewInt(200000000)))
@@ -92,7 +92,7 @@ func TestInternalCall(t *testing.T) {
 	}
 	_, err = k.HandleInternalEVMCall(ctx, req)
 	require.Nil(t, err)
-	require.Equal(t, int64(1000), testkeeper.EVMTestApp.BankKeeper.GetBalance(ctx, receiverAddr, "test").Amount.Int64())
+	require.Equal(t, int64(1000), testkeeper.EVMTestApp().BankKeeper.GetBalance(ctx, receiverAddr, "test").Amount.Int64())
 }
 
 func TestStaticCall(t *testing.T) {
@@ -103,8 +103,8 @@ func TestStaticCall(t *testing.T) {
 	require.Nil(t, err)
 	contractData := append(bytecode, args...)
 
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	testAddr, senderEvmAddr := testkeeper.MockAddressPair()
 	k.SetAddressMapping(ctx, testAddr, senderEvmAddr)
 	amt := sdk.NewCoins(sdk.NewCoin(k.GetBaseDenom(ctx), sdk.NewInt(2000)))
@@ -135,8 +135,8 @@ func TestStaticCall(t *testing.T) {
 func TestNegativeTransfer(t *testing.T) {
 	steal_amount := int64(1_000_000_000_000)
 
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	attackerAddr, attackerEvmAddr := testkeeper.MockAddressPair()
 	victimAddr, victimEvmAddr := testkeeper.MockAddressPair()
 
@@ -159,8 +159,8 @@ func TestNegativeTransfer(t *testing.T) {
 	}
 
 	// pre verification
-	preAttackerBal := testkeeper.EVMTestApp.BankKeeper.GetBalance(ctx, attackerAddr, k.GetBaseDenom(ctx)).Amount.Int64()
-	preVictimBal := testkeeper.EVMTestApp.BankKeeper.GetBalance(ctx, victimAddr, k.GetBaseDenom(ctx)).Amount.Int64()
+	preAttackerBal := testkeeper.EVMTestApp().BankKeeper.GetBalance(ctx, attackerAddr, k.GetBaseDenom(ctx)).Amount.Int64()
+	preVictimBal := testkeeper.EVMTestApp().BankKeeper.GetBalance(ctx, victimAddr, k.GetBaseDenom(ctx)).Amount.Int64()
 	require.Zero(t, preAttackerBal)
 	require.Equal(t, steal_amount, preVictimBal)
 
@@ -168,8 +168,8 @@ func TestNegativeTransfer(t *testing.T) {
 	require.ErrorContains(t, err, "invalid coins")
 
 	// post verification
-	postAttackerBal := testkeeper.EVMTestApp.BankKeeper.GetBalance(ctx, attackerAddr, k.GetBaseDenom(ctx)).Amount.Int64()
-	postVictimBal := testkeeper.EVMTestApp.BankKeeper.GetBalance(ctx, victimAddr, k.GetBaseDenom(ctx)).Amount.Int64()
+	postAttackerBal := testkeeper.EVMTestApp().BankKeeper.GetBalance(ctx, attackerAddr, k.GetBaseDenom(ctx)).Amount.Int64()
+	postVictimBal := testkeeper.EVMTestApp().BankKeeper.GetBalance(ctx, victimAddr, k.GetBaseDenom(ctx)).Amount.Int64()
 	require.Zero(t, postAttackerBal)
 	require.Equal(t, steal_amount, postVictimBal)
 
@@ -185,8 +185,8 @@ func TestNegativeTransfer(t *testing.T) {
 }
 
 func TestHandleInternalEVMDelegateCall_AssociationError(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().NewContext(false, tmtypes.Header{}).WithBlockHeight(2)
 	testAddr, _ := testkeeper.MockAddressPair()
 	cwAddr, contractAddr := testkeeper.MockAddressPair()
 	castedAddr := common.BytesToAddress(cwAddr.Bytes())

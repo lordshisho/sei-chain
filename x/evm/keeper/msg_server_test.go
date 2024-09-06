@@ -625,8 +625,8 @@ func TestRegisterPointer(t *testing.T) {
 }
 
 func TestEvmError(t *testing.T) {
-	k := testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{})
+	k := testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{})
 	code, err := os.ReadFile("../../../example/contracts/simplestorage/SimpleStorage.bin")
 	require.Nil(t, err)
 	bz, err := hex.DecodeString(string(code))
@@ -659,13 +659,13 @@ func TestEvmError(t *testing.T) {
 	k.BankKeeper().MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(k.GetBaseDenom(ctx), sdk.NewInt(1000000))))
 	k.BankKeeper().SendCoinsFromModuleToAccount(ctx, types.ModuleName, evmAddr[:], amt)
 
-	tb := testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	tb := testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	tb.SetMsgs(req)
 	sdktx := tb.GetTx()
-	txbz, err := testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(sdktx)
+	txbz, err := testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(sdktx)
 	require.Nil(t, err)
 
-	res := testkeeper.EVMTestApp.DeliverTx(ctx, abci.RequestDeliverTx{Tx: txbz}, sdktx, sha256.Sum256(txbz))
+	res := testkeeper.EVMTestApp().DeliverTx(ctx, abci.RequestDeliverTx{Tx: txbz}, sdktx, sha256.Sum256(txbz))
 	require.Equal(t, uint32(0), res.Code)
 	require.NoError(t, k.FlushTransientReceipts(ctx))
 	receipt, err := k.GetReceipt(ctx, common.HexToHash(res.EvmTxInfo.TxHash))
@@ -692,13 +692,13 @@ func TestEvmError(t *testing.T) {
 	req, err = types.NewMsgEVMTransaction(txwrapper)
 	require.Nil(t, err)
 
-	tb = testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	tb = testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	tb.SetMsgs(req)
 	sdktx = tb.GetTx()
-	txbz, err = testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(sdktx)
+	txbz, err = testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(sdktx)
 	require.Nil(t, err)
 
-	res = testkeeper.EVMTestApp.DeliverTx(ctx, abci.RequestDeliverTx{Tx: txbz}, sdktx, sha256.Sum256(txbz))
+	res = testkeeper.EVMTestApp().DeliverTx(ctx, abci.RequestDeliverTx{Tx: txbz}, sdktx, sha256.Sum256(txbz))
 	require.NoError(t, k.FlushTransientReceipts(ctx))
 	require.Equal(t, sdkerrors.ErrEVMVMError.ABCICode(), res.Code)
 	receipt, err = k.GetReceipt(ctx, common.HexToHash(res.EvmTxInfo.TxHash))
@@ -744,18 +744,18 @@ func TestAssociateContractAddress(t *testing.T) {
 }
 
 func TestAssociate(t *testing.T) {
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithChainID("sei-test").WithBlockHeight(1)
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithChainID("sei-test").WithBlockHeight(1)
 	privKey := testkeeper.MockPrivateKey()
 	seiAddr, evmAddr := testkeeper.PrivateKeyToAddresses(privKey)
-	acc := testkeeper.EVMTestApp.AccountKeeper.NewAccountWithAddress(ctx, seiAddr)
-	testkeeper.EVMTestApp.AccountKeeper.SetAccount(ctx, acc)
+	acc := testkeeper.EVMTestApp().AccountKeeper.NewAccountWithAddress(ctx, seiAddr)
+	testkeeper.EVMTestApp().AccountKeeper.SetAccount(ctx, acc)
 	msg := types.NewMsgAssociate(seiAddr, "test")
-	tb := testkeeper.EVMTestApp.GetTxConfig().NewTxBuilder()
+	tb := testkeeper.EVMTestApp().GetTxConfig().NewTxBuilder()
 	tb.SetMsgs(msg)
 	tb.SetSignatures(signing.SignatureV2{
 		PubKey: privKey.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  testkeeper.EVMTestApp.GetTxConfig().SignModeHandler().DefaultMode(),
+			SignMode:  testkeeper.EVMTestApp().GetTxConfig().SignModeHandler().DefaultMode(),
 			Signature: nil,
 		},
 		Sequence: acc.GetSequence(),
@@ -765,7 +765,7 @@ func TestAssociate(t *testing.T) {
 		AccountNumber: acc.GetAccountNumber(),
 		Sequence:      acc.GetSequence(),
 	}
-	signBytes, err := testkeeper.EVMTestApp.GetTxConfig().SignModeHandler().GetSignBytes(testkeeper.EVMTestApp.GetTxConfig().SignModeHandler().DefaultMode(), signerData, tb.GetTx())
+	signBytes, err := testkeeper.EVMTestApp().GetTxConfig().SignModeHandler().GetSignBytes(testkeeper.EVMTestApp().GetTxConfig().SignModeHandler().DefaultMode(), signerData, tb.GetTx())
 	require.Nil(t, err)
 	sig, err := privKey.Sign(signBytes)
 	require.Nil(t, err)
@@ -773,21 +773,21 @@ func TestAssociate(t *testing.T) {
 	sigs[0] = signing.SignatureV2{
 		PubKey: privKey.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  testkeeper.EVMTestApp.GetTxConfig().SignModeHandler().DefaultMode(),
+			SignMode:  testkeeper.EVMTestApp().GetTxConfig().SignModeHandler().DefaultMode(),
 			Signature: sig,
 		},
 		Sequence: acc.GetSequence(),
 	}
 	require.Nil(t, tb.SetSignatures(sigs...))
 	sdktx := tb.GetTx()
-	txbz, err := testkeeper.EVMTestApp.GetTxConfig().TxEncoder()(sdktx)
+	txbz, err := testkeeper.EVMTestApp().GetTxConfig().TxEncoder()(sdktx)
 	require.Nil(t, err)
 
-	res := testkeeper.EVMTestApp.DeliverTx(ctx, abci.RequestDeliverTx{Tx: txbz}, sdktx, sha256.Sum256(txbz))
+	res := testkeeper.EVMTestApp().DeliverTx(ctx, abci.RequestDeliverTx{Tx: txbz}, sdktx, sha256.Sum256(txbz))
 	require.NotEqual(t, uint32(0), res.Code) // not enough balance
 
-	require.Nil(t, testkeeper.EVMTestApp.BankKeeper.AddWei(ctx, sdk.AccAddress(evmAddr[:]), sdk.OneInt()))
+	require.Nil(t, testkeeper.EVMTestApp().BankKeeper.AddWei(ctx, sdk.AccAddress(evmAddr[:]), sdk.OneInt()))
 
-	res = testkeeper.EVMTestApp.DeliverTx(ctx, abci.RequestDeliverTx{Tx: txbz}, sdktx, sha256.Sum256(txbz))
+	res = testkeeper.EVMTestApp().DeliverTx(ctx, abci.RequestDeliverTx{Tx: txbz}, sdktx, sha256.Sum256(txbz))
 	require.Equal(t, uint32(0), res.Code)
 }

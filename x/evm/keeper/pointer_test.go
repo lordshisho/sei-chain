@@ -32,7 +32,7 @@ type seiPointerTest struct {
 }
 
 func TestEVMtoCWPointers(t *testing.T) {
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{})
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{})
 
 	tests := []seiPointerTest{
 		{
@@ -116,8 +116,8 @@ func TestEVMtoCWPointers(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			k := &testkeeper.EVMTestApp.EvmKeeper
-			ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+			k := &testkeeper.EVMTestApp().EvmKeeper
+			ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 			handlers := test.getHandlers(k)
 			cwAddress, evmAddress := testkeeper.MockAddressPair()
 
@@ -221,8 +221,8 @@ func TestCWtoEVMPointers(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			k := &testkeeper.EVMTestApp.EvmKeeper
-			ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+			k := &testkeeper.EVMTestApp().EvmKeeper
+			ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 			handlers := test.getHandlers(k)
 			cwAddress, evmAddress := testkeeper.MockAddressPair()
 

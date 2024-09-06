@@ -10,8 +10,8 @@ import (
 )
 
 func TestBaseFeePerGas(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{})
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{})
 	require.Equal(t, k.GetMinimumFeePerGas(ctx), k.GetDynamicBaseFeePerGas(ctx))
 	k.SetDynamicBaseFeePerGas(ctx, sdk.OneDec())
 	require.Equal(t, sdk.NewDecFromInt(sdk.NewInt(1)), k.GetDynamicBaseFeePerGas(ctx))

@@ -10,8 +10,8 @@ import (
 )
 
 func TestState(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{}).WithBlockTime(time.Now())
 	_, addr := testkeeper.MockAddressPair()
 
 	initialState := k.GetState(ctx, addr, common.HexToHash("0xabc"))

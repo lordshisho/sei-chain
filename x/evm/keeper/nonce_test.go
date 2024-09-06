@@ -8,8 +8,8 @@ import (
 )
 
 func TestNonce(t *testing.T) {
-	k := &testkeeper.EVMTestApp.EvmKeeper
-	ctx := testkeeper.EVMTestApp.GetContextForDeliverTx([]byte{})
+	k := &testkeeper.EVMTestApp().EvmKeeper
+	ctx := testkeeper.EVMTestApp().GetContextForDeliverTx([]byte{})
 	_, evmAddr := testkeeper.MockAddressPair()
 	require.Equal(t, uint64(0), k.GetNonce(ctx, evmAddr))
 	k.SetNonce(ctx, evmAddr, 1)
